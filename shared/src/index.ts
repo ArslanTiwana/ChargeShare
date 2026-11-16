@@ -13,3 +13,6 @@ export * from './schemas/review';
 export * from './schemas/dispute';
 export * from './schemas/admin';
 export * from './schemas/health';
+export * from './schemas/push-token';
+export * from './schemas/support';
+export * from './schemas/account';

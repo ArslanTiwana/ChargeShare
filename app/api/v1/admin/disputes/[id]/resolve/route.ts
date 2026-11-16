@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { requireAdminSession } from '@/lib/auth';
 import { NotFoundError } from '@/lib/errors';
 import { resolveDisputeSchema } from '@/shared/src';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -106,8 +107,29 @@ export async function POST(
         },
       });
 
-      return { dispute: updatedDispute, idempotent: false };
+      return {
+        dispute: updatedDispute,
+        driverId: dispute.booking.driverId,
+        hostId: dispute.booking.charger.hostId,
+        bookingId: dispute.booking.id,
+        idempotent: false,
+      };
     });
+
+    if (!result.idempotent) {
+      const parties = [result.driverId, result.hostId].filter(Boolean) as string[];
+      for (const userId of parties) {
+        dispatchPushNotification({
+          userId,
+          title: 'Dispute Resolved',
+          body: 'A dispute has been resolved by admin.',
+          data: {
+            type: 'DISPUTE_RESOLVED',
+            bookingId: result.bookingId,
+          },
+        });
+      }
+    }
 
     return apiSuccess({
       id: result.dispute.id,

@@ -2,6 +2,7 @@ import { apiSuccess, apiError } from '@/lib/api-response';
 import db from '@/lib/db';
 import { requireAdminSession } from '@/lib/auth';
 import { NotFoundError } from '@/lib/errors';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -42,6 +43,15 @@ export async function POST(
       });
 
       return updated;
+    });
+
+    dispatchPushNotification({
+      userId: result.id,
+      title: 'Host Account Suspended',
+      body: 'Your host account has been suspended. Please contact support.',
+      data: {
+        type: 'HOST_SUSPENDED',
+      },
     });
 
     return apiSuccess({

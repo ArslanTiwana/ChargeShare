@@ -1,13 +1,14 @@
 import { apiSuccess, apiError } from '@/lib/api-response';
 import db from '@/lib/db';
 import { UnauthorizedError } from '@/lib/errors';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       throw new UnauthorizedError('Unauthorized cron request');
     }
 
@@ -73,6 +74,16 @@ export async function GET(request: Request) {
         });
 
         autoConfirmedCount += 1;
+      });
+
+      dispatchPushNotification({
+        userId: booking.charger.hostId,
+        title: 'Session Auto-Confirmed',
+        body: 'Charging session was auto-confirmed.',
+        data: {
+          type: 'SESSION_AUTO_CONFIRMED',
+          bookingId: booking.id,
+        },
       });
     }
 

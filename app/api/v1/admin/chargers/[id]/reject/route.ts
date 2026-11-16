@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { requireAdminSession } from '@/lib/auth';
 import { rejectReasonSchema } from '@/shared/src';
 import { NotFoundError } from '@/lib/errors';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -43,6 +44,16 @@ export async function POST(
       });
 
       return updated;
+    });
+
+    dispatchPushNotification({
+      userId: result.hostId,
+      title: 'Charger Rejected',
+      body: 'Your charger listing has been rejected.',
+      data: {
+        type: 'CHARGER_REJECTED',
+        chargerId: result.id,
+      },
     });
 
     return apiSuccess({

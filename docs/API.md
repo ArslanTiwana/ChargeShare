@@ -383,3 +383,82 @@ Integer money is in **paisa** ($1\text{ PKR} = 100\text{ paisa}$).
 - **Auth**: None (Public)
 - **Response**: `{ minBookingDurationHours: number, maxBookingDurationHours: number, bookingExpiryMinutes: number, autoConfirmHours: number, minTopupPaisa: number, maxTopupPaisa: number, maxSessionKwh: number, commissionPercent: number, topupInstructions: string, hostMinWalletWarningPaisa: number }`
 
+---
+
+## 10. Push Notifications (`/api/v1/push-tokens`)
+
+### `POST /api/v1/push-tokens`
+- **Auth**: Bearer token
+- **Body**: `{ token: string (ExponentPushToken[...]), platform: "android" | "ios" | "web" }`
+- **Action**: Upserts the device push token and updates `lastSeenAt`.
+- **Response**: `{ id: string, token: string, platform: string, userId: string, lastSeenAt: string }`
+
+### `DELETE /api/v1/push-tokens`
+- **Auth**: Bearer token
+- **Body**: `{ token: string }`
+- **Action**: Removes token upon sign out or unregistration.
+- **Response**: `{ message: string }`
+
+---
+
+## 11. Support Desk (`/api/v1/support` & `/api/v1/admin/support`)
+
+### `POST /api/v1/support`
+- **Auth**: None (Optional Bearer token for logged-in users)
+- **Body**: `{ email: string, name?: string, phone?: string, subject: string (min 3, max 100), message: string (min 10, max 2000) }`
+- **Response**: `{ id: string, status: "OPEN", message: string }`
+
+### `GET /api/v1/admin/support`
+- **Auth**: Admin Cookie Session
+- **Query**: `?status=OPEN&cursor=&limit=20`
+- **Response**: `{ items: Array<SupportMessage>, nextCursor: string | null }`
+
+### `PATCH /api/v1/admin/support/:id`
+- **Auth**: Admin Cookie Session
+- **Body**: `{ status: "OPEN" | "RESOLVED", adminNotes?: string }`
+- **Response**: `{ id: string, status: string, adminNotes: string | null, resolvedAt: string | null }`
+
+---
+
+## 12. Account Deletion & Anonymization
+
+### `DELETE /api/v1/me/account`
+- **Auth**: Bearer token
+- **Body**: `{ password?: string, confirmText: "DELETE" }`
+- **Guards**:
+  - Rejects if password is required (password-based accounts) and incorrect.
+  - Rejects if user has active bookings (`REQUESTED`, `ACCEPTED`, `CHARGING`, `READING_ENTERED`, `DISPUTED`).
+  - Rejects if host has an unsettled negative wallet balance.
+- **Action**: In one transaction:
+  - Anonymizes User record (`email = deleted_{id}@deleted.local`, `name = "Deleted User"`, `phone = null`, `isActive = false`, `passwordHash = ""`).
+  - Takes all host chargers offline (`isOnline = false`, `approvalStatus = SUSPENDED`).
+  - Deletes all push tokens and revokes all refresh tokens.
+- **Response**: `{ message: string, userId: string }`
+
+### `POST /api/v1/auth/request-deletion`
+- **Auth**: None (Web portal)
+- **Body**: `{ email: string }`
+- **Action**: Sends account deletion confirmation link/token via email if user exists. Generic response prevents email enumeration.
+- **Response**: `{ message: string }`
+
+### `POST /api/v1/auth/confirm-deletion`
+- **Auth**: None (Web portal)
+- **Body**: `{ token: string, email: string }`
+- **Action**: Validates one-time `DELETE_ACCOUNT` token and executes anonymization.
+- **Response**: `{ message: string, userId: string }`
+
+---
+
+## 13. System Health & Maintenance
+
+### `GET /api/v1/health`
+- **Auth**: None (Public probe)
+- **Response**: `{ status: "ok", timestamp: string, database: "connected" }`
+- **Errors**: `503 SERVICE_UNAVAILABLE` (if DB ping fails)
+
+### `POST /api/cron/cleanup-expired-photos`
+- **Auth**: `Bearer <CRON_SECRET>`
+- **Schedule**: Weekly (`0 3 * * 0`)
+- **Action**: Cleans up storage photos (`meterEndPhotoKey`) for completed/cancelled bookings older than 90 days.
+- **Response**: `{ deletedPhotosCount: number, cutoffDate: string }`
+

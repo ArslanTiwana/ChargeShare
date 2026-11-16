@@ -5,6 +5,7 @@ import { getWalletBalance } from '@/lib/wallet';
 import { validateBookingTransition } from '@/lib/booking-state';
 import { NotFoundError, ForbiddenError, AppError } from '@/lib/errors';
 import { Prisma } from '@prisma/client';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -74,6 +75,16 @@ export async function POST(
           rateSnapshotPaisa: booking.charger.pricePerKwhPaisa,
         },
       });
+    });
+
+    dispatchPushNotification({
+      userId: updatedBooking.driverId,
+      title: 'Booking Accepted',
+      body: 'Your booking request has been accepted.',
+      data: {
+        type: 'BOOKING_ACCEPTED',
+        bookingId: updatedBooking.id,
+      },
     });
 
     return apiSuccess({

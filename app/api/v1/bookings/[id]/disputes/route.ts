@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth';
 import { createBookingDisputeSchema } from '@/shared/src';
 import { validateBookingTransition } from '@/lib/booking-state';
 import { NotFoundError, ForbiddenError, AppError } from '@/lib/errors';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -63,15 +64,35 @@ export async function POST(
         },
       });
 
+      const targetUserId = isDriver ? booking.charger.hostId : booking.driverId;
+
       return {
         disputeId: dispute.id,
         bookingId: booking.id,
         status: dispute.status,
+        targetUserId,
         message: 'Dispute opened. Admin will review the case.',
       };
     });
 
-    return apiSuccess(result, 201);
+    if (result.targetUserId) {
+      dispatchPushNotification({
+        userId: result.targetUserId,
+        title: 'Dispute Opened',
+        body: 'A dispute has been opened for your booking.',
+        data: {
+          type: 'DISPUTE_OPENED',
+          bookingId: result.bookingId,
+        },
+      });
+    }
+
+    return apiSuccess({
+      disputeId: result.disputeId,
+      bookingId: result.bookingId,
+      status: result.status,
+      message: result.message,
+    }, 201);
   } catch (err) {
     return apiError(err);
   }

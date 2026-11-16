@@ -29,7 +29,10 @@ interface HostItem {
   phone: string | null;
   hostStatus: string;
   createdAt: string;
-  chargers: Array<{
+  _count?: {
+    chargers: number;
+  };
+  chargers?: Array<{
     id: string;
     title: string;
     areaLabel: string;
@@ -37,7 +40,7 @@ interface HostItem {
     approvalStatus: string;
     pricePerKwhPaisa: number;
   }>;
-  walletTransactions: Array<{
+  walletTransactions?: Array<{
     id: string;
     amountPaisa: number;
   }>;
@@ -241,7 +244,9 @@ export default function AdminHostsPage() {
                       <StatusBadge status={host.hostStatus} />
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="font-semibold text-slate-800">{host.chargers.length}</span>
+                      <span className="font-semibold text-slate-800">
+                        {host.chargers?.length ?? host._count?.chargers ?? 0}
+                      </span>
                     </td>
                     <td className="py-3.5 px-4 text-slate-500">
                       {formatKarachiDate(host.createdAt, false)}
@@ -369,9 +374,9 @@ export default function AdminHostsPage() {
               <div>
                 <h4 className="font-bold text-slate-900 mb-2 flex items-center gap-1.5">
                   <Zap className="w-4 h-4 text-emerald-700" />
-                  <span>Owned EV Chargers ({selectedHost.chargers?.length || 0})</span>
+                  <span>Owned EV Chargers ({selectedHost.chargers?.length ?? selectedHost._count?.chargers ?? 0})</span>
                 </h4>
-                {selectedHost.chargers?.length === 0 ? (
+                {(!selectedHost.chargers || selectedHost.chargers.length === 0) ? (
                   <p className="text-slate-400 p-4 border rounded-xl text-center">
                     No chargers registered yet.
                   </p>

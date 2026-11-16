@@ -2,6 +2,7 @@ import { apiSuccess, apiError } from '@/lib/api-response';
 import db from '@/lib/db';
 import { requireAdminSession } from '@/lib/auth';
 import { NotFoundError } from '@/lib/errors';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -39,6 +40,16 @@ export async function POST(
       });
 
       return updated;
+    });
+
+    dispatchPushNotification({
+      userId: result.hostId,
+      title: 'Charger Approved',
+      body: 'Your charger listing has been approved.',
+      data: {
+        type: 'CHARGER_APPROVED',
+        chargerId: result.id,
+      },
     });
 
     return apiSuccess({

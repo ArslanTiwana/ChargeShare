@@ -3,6 +3,8 @@ import db from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { validateBookingTransition } from '@/lib/booking-state';
 import { NotFoundError, ForbiddenError, AppError } from '@/lib/errors';
+import { getWalletBalance } from '@/lib/wallet';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -71,12 +73,46 @@ export async function POST(
 
       return {
         bookingId: booking.id,
+        hostId: booking.charger.hostId,
         status: 'CONFIRMED',
         commissionDeductedPaisa: booking.session.commissionPaisa,
         idempotent: false,
         message: 'Charging session confirmed. Commission deducted from host wallet.',
       };
     });
+
+    if (!result.idempotent && result.hostId) {
+      dispatchPushNotification({
+        userId: result.hostId,
+        title: 'Session Confirmed',
+        body: 'Driver has confirmed the charging session.',
+        data: {
+          type: 'SESSION_CONFIRMED',
+          bookingId: result.bookingId,
+        },
+      });
+
+      // Check wallet warning threshold
+      try {
+        const warningConfig = await db.appConfig.findUnique({
+          where: { key: 'hostMinWalletWarningPaisa' },
+        });
+        const threshold = warningConfig ? parseInt(warningConfig.value, 10) : 50000;
+        const currentBalance = await getWalletBalance(result.hostId);
+        if (currentBalance < threshold) {
+          dispatchPushNotification({
+            userId: result.hostId,
+            title: 'Low Wallet Balance',
+            body: 'Your wallet balance is low. Please top up to keep receiving bookings.',
+            data: {
+              type: 'WALLET_LOW_BALANCE',
+            },
+          });
+        }
+      } catch (err) {
+        console.error('Failed to check wallet balance warning:', err);
+      }
+    }
 
     return apiSuccess(result);
   } catch (err) {

@@ -6,12 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, spacing, radii } from '../../src/theme';
 import { Button, TextField, StatusBadge, Toast, Card, RoleSwitcher } from '../../src/components';
 import { useAuthStore } from '../../src/store/auth-store';
 import { updateProfileApi, resendVerificationApi, applyHostApi } from '../../src/api/auth';
+import { apiFetch } from '../../src/api/client';
 import { ApiError } from '../../src/api/types';
 
 export default function ProfileScreen() {
@@ -33,6 +35,12 @@ export default function ProfileScreen() {
   // Host application state
   const [isApplyingHost, setIsApplyingHost] = useState(false);
   const [hostApplyError, setHostApplyError] = useState('');
+
+  // Account deletion state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   if (!user) {
     return null;
@@ -127,6 +135,40 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    setDeleteError('');
+
+    try {
+      await apiFetch('/me/account', {
+        method: 'DELETE',
+        body: JSON.stringify({ password: deletePassword ? deletePassword : undefined }),
+      });
+      setShowDeleteModal(false);
+      Alert.alert(
+        'Account Deleted',
+        'Your account and personal data have been permanently anonymized.',
+        [
+          {
+            text: 'OK',
+            onPress: async () => {
+              await signOut();
+              router.replace('/(auth)/sign-in');
+            },
+          },
+        ]
+      );
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        setDeleteError(err.message || 'Failed to delete account.');
+      } else {
+        setDeleteError('An error occurred. Please check network connectivity.');
+      }
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   const getHostStatusDescription = () => {
@@ -290,6 +332,21 @@ export default function ProfileScreen() {
         ) : null}
       </Card>
 
+      {/* Help & Support */}
+      <Card style={styles.helpCard}>
+        <TouchableOpacity
+          style={styles.helpRow}
+          onPress={() => router.push('/(app)/help')}
+          accessibilityRole="button"
+        >
+          <View style={styles.helpTextContainer}>
+            <Text style={styles.helpTitle}>Help & Support Desk</Text>
+            <Text style={styles.helpSubtitle}>FAQs, Contact Support, Terms & Privacy</Text>
+          </View>
+          <Text style={styles.arrowText}>›</Text>
+        </TouchableOpacity>
+      </Card>
+
       {/* Account Actions */}
       <View style={styles.actionsContainer}>
         <Button
@@ -299,20 +356,71 @@ export default function ProfileScreen() {
           style={styles.signOutButton}
         />
 
-        {/* Delete Account (Disabled) */}
+        {/* Delete Account */}
         <View style={styles.deleteAccountWrapper}>
           <Button
             title="Delete Account"
-            onPress={() => {}}
+            onPress={() => {
+              setDeletePassword('');
+              setDeleteError('');
+              setShowDeleteModal(true);
+            }}
             variant="danger"
-            disabled
             style={styles.deleteButton}
           />
           <Text style={styles.deleteHelpText}>
-            Contact support at support@chargeshare.pk to request account deletion.
+            Permanently anonymizes your account according to Google Play guidelines.
           </Text>
         </View>
       </View>
+
+      {/* Account Deletion Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Delete Account?</Text>
+            <Text style={styles.modalWarning}>
+              Warning: This action is permanent. Your personal details will be wiped and active sessions terminated.
+            </Text>
+
+            {deleteError ? (
+              <View style={styles.modalErrorBox}>
+                <Text style={styles.modalErrorText}>{deleteError}</Text>
+              </View>
+            ) : null}
+
+            <TextField
+              label="Account Password"
+              placeholder="Enter password (if applicable)"
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+              secureTextEntry
+            />
+
+            <View style={styles.modalButtonRow}>
+              <Button
+                title="Cancel"
+                variant="secondary"
+                onPress={() => setShowDeleteModal(false)}
+                style={styles.modalCancelBtn}
+              />
+              <Button
+                title={isDeletingAccount ? 'Deleting...' : 'Delete'}
+                variant="danger"
+                onPress={handleDeleteAccount}
+                loading={isDeletingAccount}
+                disabled={isDeletingAccount}
+                style={styles.modalDeleteBtn}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -476,17 +584,90 @@ const styles = StyleSheet.create({
   signOutButton: {
     marginBottom: spacing.xl,
   },
+  helpCard: {
+    marginBottom: spacing.lg,
+  },
+  helpRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  helpTextContainer: {
+    flex: 1,
+  },
+  helpTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.ink,
+  },
+  helpSubtitle: {
+    fontSize: 12,
+    color: colors.mutedText,
+    marginTop: 2,
+  },
+  arrowText: {
+    fontSize: 18,
+    color: colors.mutedText,
+    marginLeft: 8,
+  },
   deleteAccountWrapper: {
     alignItems: 'center',
   },
   deleteButton: {
     width: '100%',
-    opacity: 0.4,
   },
   deleteHelpText: {
     fontSize: 12,
     color: colors.subtleText,
     marginTop: spacing.xs,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalCard: {
+    backgroundColor: colors.white,
+    borderRadius: radii.lg,
+    padding: spacing.xl,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.dangerDark,
+    marginBottom: spacing.xs,
+  },
+  modalWarning: {
+    fontSize: 13,
+    color: colors.ink,
+    lineHeight: 18,
+    marginBottom: spacing.md,
+  },
+  modalErrorBox: {
+    backgroundColor: colors.dangerLight,
+    padding: spacing.sm,
+    borderRadius: radii.sm,
+    marginBottom: spacing.sm,
+  },
+  modalErrorText: {
+    fontSize: 12,
+    color: colors.dangerDark,
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  modalCancelBtn: {
+    flex: 1,
+  },
+  modalDeleteBtn: {
+    flex: 1,
   },
 });

@@ -28,3 +28,39 @@ jest.mock('expo-secure-store', () => {
     }),
   };
 });
+
+// Mock expo-notifications
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(),
+  getPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
+  requestPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
+  getExpoPushTokenAsync: jest.fn(async () => ({ data: 'ExponentPushToken[mock]' })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  AndroidImportance: { MAX: 5 },
+}));
+
+// Mock react-native-maps
+jest.mock('react-native-maps', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: (props) => <View {...props} />,
+    Marker: (props) => <View {...props} />,
+    Callout: (props) => <View {...props} />,
+    PROVIDER_GOOGLE: 'google',
+  };
+});
+
+// Mock @gorhom/bottom-sheet
+jest.mock('@gorhom/bottom-sheet', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: React.forwardRef((props, ref) => <View {...props} />),
+    BottomSheetView: (props) => <View {...props} />,
+    BottomSheetBackdrop: (props) => <View {...props} />,
+  };
+});

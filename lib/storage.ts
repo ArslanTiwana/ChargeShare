@@ -71,3 +71,26 @@ export async function checkObjectExists(key: string): Promise<boolean> {
   }
 }
 
+export async function deleteObject(key: string): Promise<boolean> {
+  if (
+    !process.env.STORAGE_ENDPOINT ||
+    process.env.STORAGE_ENDPOINT.includes('<account-id>') ||
+    process.env.NODE_ENV === 'test'
+  ) {
+    return true;
+  }
+
+  try {
+    const { DeleteObjectCommand } = await import('@aws-sdk/client-s3');
+    const command = new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    });
+    await s3.send(command);
+    return true;
+  } catch (err) {
+    console.error(`Failed to delete object ${key}:`, err);
+    return false;
+  }
+}
+

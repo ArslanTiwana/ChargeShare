@@ -6,6 +6,7 @@ import { validateBookingTransition } from '@/lib/booking-state';
 import { checkObjectExists } from '@/lib/storage';
 import { NotFoundError, ForbiddenError, AppError } from '@/lib/errors';
 import { Prisma } from '@prisma/client';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -143,8 +144,20 @@ export async function POST(
         },
       });
 
-      return { session, bookingStatus: 'COMPLETED', revised: false };
+      return { session, bookingStatus: 'COMPLETED', revised: false, driverId: booking.driverId };
     });
+
+    if (result.driverId) {
+      dispatchPushNotification({
+        userId: result.driverId,
+        title: 'Meter Reading Submitted',
+        body: 'Host has submitted the meter reading. Please review and confirm.',
+        data: {
+          type: 'READING_ENTERED',
+          bookingId,
+        },
+      });
+    }
 
     return apiSuccess({
       sessionId: result.session.id,

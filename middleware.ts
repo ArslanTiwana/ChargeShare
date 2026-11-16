@@ -13,6 +13,9 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('Content-Security-Policy', "frame-ancestors 'none';");
   response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(self), geolocation=(self), microphone=()');
+  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   return response;
 }
 
@@ -104,18 +107,28 @@ export async function middleware(request: NextRequest) {
       // CSRF check on non-GET requests with cookie auth
       if (request.method !== 'GET') {
         const origin = request.headers.get('origin');
-        const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        if (origin && origin !== appUrl) {
-          return NextResponse.json(
-            {
-              data: null,
-              error: {
-                code: 'FORBIDDEN',
-                message: 'CSRF check failed: Origin header mismatch',
+        if (origin) {
+          const requestOrigin = request.nextUrl.origin;
+          const allowed = [
+            requestOrigin,
+            process.env.APP_URL?.replace(/\/$/, ''),
+            process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, ''),
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+          ].filter(Boolean);
+
+          if (!allowed.includes(origin.replace(/\/$/, ''))) {
+            return NextResponse.json(
+              {
+                data: null,
+                error: {
+                  code: 'FORBIDDEN',
+                  message: 'CSRF check failed: Origin header mismatch',
+                },
               },
-            },
-            { status: 403 }
-          );
+              { status: 403 }
+            );
+          }
         }
       }
     } catch {

@@ -65,6 +65,12 @@ enum DisputeStatus {
 enum EmailTokenType {
   VERIFY_EMAIL
   RESET_PASSWORD
+  DELETE_ACCOUNT
+}
+
+enum SupportStatus {
+  OPEN
+  RESOLVED
 }
 
 model User {
@@ -97,6 +103,8 @@ model User {
   sessionEdits       SessionEdit[]
   adminAuditLogs     AdminAuditLog[]
   cancelledBookings  Booking[]           @relation("CancelledBookings")
+  pushTokens         PushToken[]
+  supportMessages    SupportMessage[]
 
   @@index([email])
 }
@@ -185,6 +193,7 @@ model Booking {
   @@index([status])
   @@index([startsAt, endsAt])
   @@index([cancelledById])
+  @@index([chargerId, status])
 }
 
 model Session {
@@ -236,6 +245,7 @@ model WalletTransaction {
   @@index([hostId])
   @@index([bookingId])
   @@index([topupId])
+  @@index([hostId, createdAt])
 }
 
 model WalletTopup {
@@ -314,4 +324,33 @@ model AppConfig {
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PushToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token      String   @unique
+  platform   String
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+model SupportMessage {
+  id         String        @id @default(cuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject    String
+  message    String
+  appVersion String?
+  status     SupportStatus @default(OPEN)
+  resolution String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

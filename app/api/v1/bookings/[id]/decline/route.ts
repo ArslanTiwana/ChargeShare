@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { requireApprovedHost } from '@/lib/auth';
 import { validateBookingTransition } from '@/lib/booking-state';
 import { NotFoundError, ForbiddenError } from '@/lib/errors';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -30,6 +31,16 @@ export async function POST(
     const updated = await db.booking.update({
       where: { id: booking.id },
       data: { status: 'DECLINED' },
+    });
+
+    dispatchPushNotification({
+      userId: booking.driverId,
+      title: 'Booking Declined',
+      body: 'Your booking request has been declined.',
+      data: {
+        type: 'BOOKING_DECLINED',
+        bookingId: booking.id,
+      },
     });
 
     return apiSuccess({

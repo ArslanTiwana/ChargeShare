@@ -39,25 +39,28 @@ export interface AuthJwtPayload {
   userId: string;
   email: string;
   role: UserRole;
-  hostStatus: HostStatus;
+  hostStatus?: HostStatus;
 }
 
 export async function signAccessToken(payload: AuthJwtPayload): Promise<string> {
-  return new SignJWT({ ...payload })
+  return new SignJWT({
+    ...payload,
+    hostStatus: payload.hostStatus || 'NONE',
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(ACCESS_TOKEN_EXPIRY)
     .sign(getJwtSecret());
 }
 
-export async function verifyAccessToken(token: string): Promise<AuthJwtPayload> {
+export async function verifyAccessToken(token: string): Promise<Required<AuthJwtPayload>> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
     return {
       userId: payload.userId as string,
       email: payload.email as string,
       role: payload.role as UserRole,
-      hostStatus: payload.hostStatus as HostStatus,
+      hostStatus: (payload.hostStatus as HostStatus) || 'NONE',
     };
   } catch {
     throw new UnauthorizedError('Invalid or expired access token');
@@ -260,9 +263,25 @@ export async function requireAdminSession(request: Request): Promise<User> {
   // CSRF validation on non-GET requests per requirement 4
   if (request.method !== 'GET') {
     const origin = request.headers.get('origin');
-    const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    if (origin && origin !== appUrl) {
-      throw new ForbiddenError('CSRF check failed: Origin header mismatch');
+    if (origin) {
+      const requestOrigin = (() => {
+        try {
+          return new URL(request.url).origin;
+        } catch {
+          return null;
+        }
+      })();
+      const allowed = [
+        requestOrigin,
+        process.env.APP_URL?.replace(/\/$/, ''),
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, ''),
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+      ].filter(Boolean);
+
+      if (!allowed.includes(origin.replace(/\/$/, ''))) {
+        throw new ForbiddenError('CSRF check failed: Origin header mismatch');
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth';
 import { cancelBookingSchema } from '@/shared/src';
 import { validateBookingTransition } from '@/lib/booking-state';
 import { NotFoundError, ForbiddenError } from '@/lib/errors';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -45,6 +46,26 @@ export async function POST(
         cancelledById: user.id,
       },
     });
+
+    const targetUserIds: string[] = [];
+    if (isDriver) targetUserIds.push(booking.charger.hostId);
+    else if (isHost) targetUserIds.push(booking.driverId);
+    else {
+      targetUserIds.push(booking.charger.hostId);
+      targetUserIds.push(booking.driverId);
+    }
+
+    for (const targetId of targetUserIds) {
+      dispatchPushNotification({
+        userId: targetId,
+        title: 'Booking Cancelled',
+        body: 'A booking has been cancelled.',
+        data: {
+          type: 'BOOKING_CANCELLED',
+          bookingId: booking.id,
+        },
+      });
+    }
 
     return apiSuccess({
       id: updated.id,

@@ -18,6 +18,7 @@ import {
   X,
   Shield,
   Loader2,
+  LifeBuoy,
 } from 'lucide-react';
 import { adminFetch } from '../_lib/api-client';
 import { useToast } from './toast';
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
   { href: '/admin/topups', label: 'Top-ups', icon: CreditCard },
   { href: '/admin/bookings', label: 'Bookings', icon: CalendarCheck },
   { href: '/admin/disputes', label: 'Disputes', icon: AlertOctagon },
+  { href: '/admin/support', label: 'Support Desk', icon: LifeBuoy },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/settings', label: 'Platform Settings', icon: Settings },
   { href: '/admin/audit-log', label: 'Audit Log', icon: FileText },

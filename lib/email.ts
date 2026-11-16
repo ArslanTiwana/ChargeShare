@@ -66,3 +66,35 @@ export async function sendPasswordResetEmail(email: string, rawToken: string): P
     console.error('Failed to send password reset email via Resend:', err);
   }
 }
+
+export async function sendAccountDeletionEmail(email: string, rawToken: string): Promise<void> {
+  const deleteUrl = `${appUrl}/delete-account?token=${rawToken}`;
+
+  if (!resend) {
+    console.log('\n-----------------------------------------------------------');
+    console.log(`[DEV EMAIL] Account deletion confirmation email to: ${email}`);
+    console.log(`[DEV EMAIL] Link: ${deleteUrl}`);
+    console.log('-----------------------------------------------------------\n');
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Confirm ChargeShare Account Deletion',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #dc2626;">Account Deletion Request</h2>
+          <p>We received a request to permanently delete your ChargeShare account. This action cannot be undone.</p>
+          <p>If you wish to proceed, click the button below:</p>
+          <p><a href="${deleteUrl}" style="display: inline-block; background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Permanently Delete Account</a></p>
+          <p>Or copy and paste this link in your browser: <br>${deleteUrl}</p>
+          <p>This link will expire in 1 hour. If you did not request this deletion, please secure your account immediately.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error('Failed to send deletion confirmation email via Resend:', err);
+  }
+}

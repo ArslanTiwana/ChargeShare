@@ -6,6 +6,7 @@ import { getWalletBalance } from '@/lib/wallet';
 import { lazyExpireBookings } from '@/lib/booking-state';
 import { AppError, ForbiddenError } from '@/lib/errors';
 import { Prisma } from '@prisma/client';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 const MIN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
@@ -131,6 +132,16 @@ export async function POST(request: Request) {
         },
       });
     }, { maxWait: 10000, timeout: 20000 });
+
+    dispatchPushNotification({
+      userId: booking.charger.hostId,
+      title: 'New Booking Request',
+      body: 'You have a new booking request.',
+      data: {
+        type: 'BOOKING_REQUESTED',
+        bookingId: booking.id,
+      },
+    });
 
     return apiSuccess(
       {

@@ -36,6 +36,22 @@ export async function GET(request: Request) {
         hostStatus: true,
         isActive: true,
         createdAt: true,
+        chargers: {
+          select: {
+            id: true,
+            title: true,
+            areaLabel: true,
+            isOnline: true,
+            approvalStatus: true,
+            pricePerKwhPaisa: true,
+          },
+        },
+        walletTransactions: {
+          select: {
+            id: true,
+            amountPaisa: true,
+          },
+        },
         _count: {
           select: { chargers: true },
         },

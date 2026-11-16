@@ -9,6 +9,7 @@ import {
 } from '../api/token-manager';
 import { API_BASE_URL } from '../api/client';
 import { getMeApi, logoutApi, updateProfileApi } from '../api/auth';
+import { unregisterPushTokenAsync } from '../utils/notifications';
 
 const ACTIVE_ROLE_KEY = 'cs_mobile_active_role';
 export type AppRole = 'driver' | 'host';
@@ -108,6 +109,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     signOut: async () => {
       try {
+        await unregisterPushTokenAsync().catch(() => {});
         await logoutApi();
       } finally {
         set({

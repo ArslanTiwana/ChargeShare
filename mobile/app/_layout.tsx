@@ -14,6 +14,12 @@ import {
 import { useAuthStore } from '../src/store/auth-store';
 import { colors } from '../src/theme';
 import { initGoogleAuth } from '../src/services/google-auth';
+import { initMobileSentry } from '../src/utils/sentry';
+import * as Notifications from 'expo-notifications';
+import {
+  registerForPushNotificationsAsync,
+  handleNotificationNavigation,
+} from '../src/utils/notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +36,7 @@ function AuthGate() {
   const router = useRouter();
 
   useEffect(() => {
+    initMobileSentry();
     initGoogleAuth();
     initializeAuth();
   }, [initializeAuth]);
@@ -47,6 +54,20 @@ function AuthGate() {
       router.replace('/(app)/find');
     }
   }, [isLoading, isAuthenticated, segments, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      registerForPushNotificationsAsync().catch(() => {});
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request?.content?.data;
+      handleNotificationNavigation(data as Record<string, unknown>, router);
+    });
+    return () => subscription.remove();
+  }, [router]);
 
   if (isLoading) {
     return (

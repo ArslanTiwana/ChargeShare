@@ -2,6 +2,7 @@ import { apiSuccess, apiError } from '@/lib/api-response';
 import db from '@/lib/db';
 import { requireAdminSession } from '@/lib/auth';
 import { NotFoundError } from '@/lib/errors';
+import { dispatchPushNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -60,6 +61,17 @@ export async function POST(
 
       return { topup: updatedTopup, idempotent: false };
     });
+
+    if (!result.idempotent) {
+      dispatchPushNotification({
+        userId: result.topup.hostId,
+        title: 'Top-up Approved',
+        body: 'Your wallet top-up request has been approved.',
+        data: {
+          type: 'TOPUP_APPROVED',
+        },
+      });
+    }
 
     return apiSuccess({
       id: result.topup.id,
