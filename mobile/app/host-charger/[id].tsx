@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getChargerDetail, updateCharger, UpdateChargerInput } from '../../src/api/chargers';
 import { HostStatusGate } from '../../src/components/HostStatusGate';
 import { ChargerForm, ChargerFormData } from '../../src/components/ChargerForm';
 import { ErrorState } from '../../src/components/ErrorState';
+import { showToast } from '../../src/store/ui-store';
 import { colors } from '../../src/theme';
 
 export default function EditChargerScreen() {
@@ -27,9 +28,19 @@ export default function EditChargerScreen() {
       queryClient.invalidateQueries({ queryKey: ['host-chargers-full'] });
       queryClient.invalidateQueries({ queryKey: ['charger-detail', id] });
       queryClient.invalidateQueries({ queryKey: ['charger-detail-edit', id] });
-      Alert.alert('Charger Updated', 'Your charger specifications have been saved successfully.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      showToast({
+        title: 'Charger Updated',
+        message: 'Your charger specifications have been saved successfully.',
+        type: 'success',
+      });
+      router.back();
+    },
+    onError: (err: any) => {
+      showToast({
+        title: 'Update Failed',
+        message: err?.message || 'Could not update charger specifications.',
+        type: 'error',
+      });
     },
   });
 

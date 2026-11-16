@@ -23,6 +23,7 @@ import { Skeleton } from '../../src/components/Skeleton';
 import { ErrorState } from '../../src/components/ErrorState';
 import { mapBookingErrorCode } from '../../src/utils/booking-errors';
 import { colors, radii, spacing } from '../../src/theme';
+import { showToast, showConfirm } from '../../src/store/ui-store';
 
 const TIMEZONE = 'Asia/Karachi';
 
@@ -98,39 +99,47 @@ export default function ChargerDetailScreen() {
     onSuccess: (booking) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['charger-availability', id] });
+      showToast({
+        title: 'Request Sent',
+        message: 'Your booking request has been sent to the host.',
+        type: 'success',
+      });
       router.replace({ pathname: '/bookings/[id]', params: { id: booking.id } });
     },
     onError: (err: any) => {
       const { title, message, action } = mapBookingErrorCode(err?.code, err?.message);
       if (action === 'profile') {
-        Alert.alert(title, message, [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Go to Profile', onPress: () => router.push('/profile') },
-        ]);
+        showConfirm({
+          title,
+          message,
+          icon: '👤',
+          confirmText: 'Go to Profile',
+          onConfirm: () => router.push('/profile'),
+        });
       } else if (action === 'refetch') {
-        Alert.alert(title, message);
+        showToast({ title, message, type: 'error' });
         availabilityQuery.refetch();
       } else {
-        Alert.alert(title, message);
+        showToast({ title, message, type: 'error' });
       }
     },
   });
 
   const handleRequestBooking = () => {
     if (!user?.phone) {
-      Alert.alert(
-        'Phone Number Required',
-        'Please add a phone number to your profile before requesting a booking so the host can contact you.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Add Phone in Profile', onPress: () => router.push('/profile') },
-        ]
-      );
+      showConfirm({
+        title: 'Phone Number Required',
+        message: 'Please add a phone number to your profile before requesting a booking so the host can contact you.',
+        icon: '📱',
+        confirmText: 'Add Phone in Profile',
+        cancelText: 'Cancel',
+        onConfirm: () => router.push('/profile'),
+      });
       return;
     }
 
     if (!selectedStartsAt || !selectedEndsAt) {
-      Alert.alert('Select Time Slot', 'Please tap an available start time slot below.');
+      showToast({ message: 'Please tap an available start time slot below.', type: 'warning' });
       return;
     }
 

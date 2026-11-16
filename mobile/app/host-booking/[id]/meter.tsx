@@ -20,6 +20,7 @@ import { Button } from '../../../src/components/Button';
 import { formatPaisaToRupees } from '../../../src/components/MoneyText';
 import { computeSessionPreview } from '../../../src/utils/money';
 import { uploadImageWithSignedUrl } from '../../../src/utils/upload-helper';
+import { showToast } from '../../../src/store/ui-store';
 import { colors, radii, spacing } from '../../../src/theme';
 
 export default function EnterMeterReadingScreen() {
@@ -73,10 +74,11 @@ export default function EnterMeterReadingScreen() {
   const handleTakePhoto = async () => {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        'Camera Permission Required',
-        'Camera access is required to take an optional verification photo of your plug-in kWh meter.'
-      );
+      showToast({
+        title: 'Camera Permission Required',
+        message: 'Camera access is required to take an optional verification photo of your plug-in kWh meter.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -99,9 +101,10 @@ export default function EnterMeterReadingScreen() {
         );
 
         setMeterPhotoKey(key);
+        showToast({ message: 'Meter photo uploaded successfully.', type: 'success' });
       }
     } catch (err: any) {
-      Alert.alert('Upload Failed', err?.message || 'Could not upload meter photo.');
+      showToast({ message: err?.message || 'Could not upload meter photo.', type: 'error' });
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -128,14 +131,19 @@ export default function EnterMeterReadingScreen() {
       queryClient.invalidateQueries({ queryKey: ['host-booking-detail', id] });
       queryClient.invalidateQueries({ queryKey: ['host-bookings-list'] });
       queryClient.invalidateQueries({ queryKey: ['host-dashboard-bookings'] });
-      Alert.alert(
-        res.revised ? 'Reading Revised' : 'Reading Submitted',
-        'Your reading has been recorded. The driver has 24 hours to review and confirm.',
-        [{ text: 'OK', onPress: () => router.replace({ pathname: '/host-booking/[id]', params: { id } }) }]
-      );
+      showToast({
+        title: res.revised ? 'Reading Revised' : 'Reading Submitted',
+        message: 'Your reading has been recorded. The driver has 24 hours to review and confirm.',
+        type: 'success',
+      });
+      router.replace({ pathname: '/host-booking/[id]', params: { id } });
     },
     onError: (err: any) => {
-      Alert.alert('Submission Failed', err?.message || 'Could not record meter reading.');
+      showToast({
+        title: 'Submission Failed',
+        message: err?.message || 'Could not record meter reading.',
+        type: 'error',
+      });
     },
   });
 

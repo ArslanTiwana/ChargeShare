@@ -15,6 +15,7 @@ import { useAuthStore } from '../../src/store/auth-store';
 import { updateProfileApi, resendVerificationApi, applyHostApi } from '../../src/api/auth';
 import { apiFetch } from '../../src/api/client';
 import { ApiError } from '../../src/api/types';
+import { showToast, showConfirm } from '../../src/store/ui-store';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -108,10 +109,11 @@ export default function ProfileScreen() {
     try {
       const res = await applyHostApi();
       setUser({ ...user, hostStatus: res.hostStatus });
-      Alert.alert(
-        'Application Submitted',
-        'Your host application is under review by the ChargeShare team. We will notify you once approved.'
-      );
+      showToast({
+        title: 'Application Submitted',
+        message: 'Your host application is under review. We will notify you once approved.',
+        type: 'success',
+      });
     } catch (err) {
       if (err instanceof ApiError) {
         setHostApplyError(err.message || 'Could not submit host application.');
@@ -123,18 +125,18 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleSignOut = async () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out of ChargeShare?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          router.replace('/(auth)/sign-in');
-        },
+  const handleSignOut = () => {
+    showConfirm({
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out of ChargeShare?',
+      icon: '🚪',
+      confirmText: 'Sign Out',
+      variant: 'danger',
+      onConfirm: async () => {
+        await signOut();
+        router.replace('/(auth)/sign-in');
       },
-    ]);
+    });
   };
 
   const handleDeleteAccount = async () => {
@@ -147,19 +149,15 @@ export default function ProfileScreen() {
         body: JSON.stringify({ password: deletePassword ? deletePassword : undefined }),
       });
       setShowDeleteModal(false);
-      Alert.alert(
-        'Account Deleted',
-        'Your account and personal data have been permanently anonymized.',
-        [
-          {
-            text: 'OK',
-            onPress: async () => {
-              await signOut();
-              router.replace('/(auth)/sign-in');
-            },
-          },
-        ]
-      );
+      showToast({
+        title: 'Account Deleted',
+        message: 'Your account and personal data have been permanently anonymized.',
+        type: 'info',
+      });
+      setTimeout(async () => {
+        await signOut();
+        router.replace('/(auth)/sign-in');
+      }, 800);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setDeleteError(err.message || 'Failed to delete account.');
@@ -383,6 +381,9 @@ export default function ProfileScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
+            <View style={[styles.modalIconBadge, { backgroundColor: colors.dangerLight }]}>
+              <Text style={{ fontSize: 24 }}>🗑️</Text>
+            </View>
             <Text style={styles.modalTitle}>Delete Account?</Text>
             <Text style={styles.modalWarning}>
               Warning: This action is permanent. Your personal details will be wiped and active sessions terminated.
@@ -625,17 +626,31 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
+    padding: spacing.xl,
   },
   modalCard: {
     backgroundColor: colors.white,
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
     padding: spacing.xl,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
+    elevation: 10,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  modalIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+    alignSelf: 'center',
   },
   modalTitle: {
     fontSize: 18,

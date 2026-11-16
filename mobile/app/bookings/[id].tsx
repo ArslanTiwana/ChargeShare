@@ -26,6 +26,7 @@ import {
   ErrorState,
 } from '../../src/components';
 import { colors, radii, spacing } from '../../src/theme';
+import { showToast, showConfirm } from '../../src/store/ui-store';
 
 const TIMEZONE = 'Asia/Karachi';
 
@@ -92,7 +93,7 @@ export default function BookingDetailScreen() {
       // In web or testing, Clipboard might be stubbed
       if (Clipboard?.setStringAsync) {
         await Clipboard.setStringAsync(booking.charger.addressLine);
-        Alert.alert('Copied', 'Host address copied to clipboard.');
+        showToast({ message: 'Host address copied to clipboard.', type: 'success' });
       }
     } catch {
       // Ignore copy error
@@ -101,57 +102,54 @@ export default function BookingDetailScreen() {
 
   const handleConfirmCancel = () => {
     if (cancelReason.trim().length < 3) {
-      Alert.alert('Reason Required', 'Please provide a reason with at least 3 characters.');
+      showToast({ message: 'Please provide a reason with at least 3 characters.', type: 'warning' });
       return;
     }
     cancelMutation.mutate(cancelReason.trim(), {
       onSuccess: () => {
         setShowCancelModal(false);
         setCancelReason('');
-        Alert.alert('Booking Cancelled', 'Your booking request has been cancelled.');
+        showToast({ message: 'Booking request has been cancelled.', type: 'info' });
       },
       onError: (err: any) => {
-        Alert.alert('Cancellation Failed', err?.message || 'Could not cancel booking.');
+        showToast({ message: err?.message || 'Could not cancel booking.', type: 'error' });
       },
     });
   };
 
   const handleConfirmReading = () => {
-    Alert.alert(
-      'Confirm Meter Reading',
-      'Have you reviewed the meter reading photos and paid the host directly?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm & Complete',
-          onPress: () => {
-            confirmMutation.mutate(undefined, {
-              onSuccess: () => {
-                Alert.alert('Confirmed', 'Session confirmed. Thank you!');
-              },
-              onError: (err: any) => {
-                Alert.alert('Error', err?.message || 'Could not confirm reading.');
-              },
-            });
+    showConfirm({
+      title: 'Confirm Meter Reading',
+      message: 'Have you reviewed the meter reading photos and paid the host directly?',
+      icon: '⚡',
+      confirmText: 'Confirm & Complete',
+      variant: 'primary',
+      onConfirm: () => {
+        confirmMutation.mutate(undefined, {
+          onSuccess: () => {
+            showToast({ message: 'Session confirmed! Thank you.', type: 'success' });
           },
-        },
-      ]
-    );
+          onError: (err: any) => {
+            showToast({ message: err?.message || 'Could not confirm reading.', type: 'error' });
+          },
+        });
+      },
+    });
   };
 
   const handleConfirmDispute = () => {
     if (disputeReason.trim().length < 5) {
-      Alert.alert('Reason Required', 'Please explain the issue with at least 5 characters.');
+      showToast({ message: 'Please explain the issue with at least 5 characters.', type: 'warning' });
       return;
     }
     disputeMutation.mutate(disputeReason.trim(), {
       onSuccess: () => {
         setShowDisputeModal(false);
         setDisputeReason('');
-        Alert.alert('Problem Reported', 'ChargeShare support has been notified and will review the reading.');
+        showToast({ message: 'Problem reported. Support has been notified.', type: 'info' });
       },
       onError: (err: any) => {
-        Alert.alert('Dispute Failed', err?.message || 'Could not submit dispute report.');
+        showToast({ message: err?.message || 'Could not submit dispute report.', type: 'error' });
       },
     });
   };
@@ -161,10 +159,10 @@ export default function BookingDetailScreen() {
       { rating, comment },
       {
         onSuccess: () => {
-          Alert.alert('Thank You', 'Your review has been submitted.');
+          showToast({ message: 'Your review has been submitted. Thank you!', type: 'success' });
         },
         onError: (err: any) => {
-          Alert.alert('Review Failed', err?.message || 'Could not submit review.');
+          showToast({ message: err?.message || 'Could not submit review.', type: 'error' });
         },
       }
     );
@@ -324,6 +322,9 @@ export default function BookingDetailScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
+            <View style={[styles.modalIconBadge, { backgroundColor: colors.dangerLight }]}>
+              <Text style={{ fontSize: 24 }}>🚫</Text>
+            </View>
             <Text style={styles.modalTitle}>Cancel Booking Request</Text>
             <Text style={styles.modalSubtitle}>
               Please tell the host why you are cancelling this request:
@@ -364,6 +365,9 @@ export default function BookingDetailScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
+            <View style={[styles.modalIconBadge, { backgroundColor: colors.warningLight }]}>
+              <Text style={{ fontSize: 24 }}>⚠️</Text>
+            </View>
             <Text style={styles.modalTitle}>Report Reading Problem</Text>
             <Text style={styles.modalSubtitle}>
               Describe the discrepancy between the meter photos and reported kWh:
@@ -389,7 +393,7 @@ export default function BookingDetailScreen() {
               onPress={() => setShowDisputeModal(false)}
               style={styles.modalCancelBtn}
             >
-              <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              <Text style={styles.modalCancelBtnText}>Dismiss</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -570,7 +574,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
@@ -580,7 +584,21 @@ const styles = StyleSheet.create({
     borderRadius: radii.xl,
     padding: spacing.xl,
     width: '100%',
+    maxWidth: 380,
     alignItems: 'center',
+    elevation: 10,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  modalIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   modalTitle: {
     fontSize: 18,

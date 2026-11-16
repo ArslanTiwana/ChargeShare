@@ -22,6 +22,7 @@ import {
   Skeleton,
   formatPaisaToRupees,
 } from '../../src/components';
+import { showToast } from '../../src/store/ui-store';
 import { colors, radii, spacing } from '../../src/theme';
 
 export default function HostChargersScreen() {
@@ -36,12 +37,16 @@ export default function HostChargersScreen() {
   const toggleMutation = useMutation({
     mutationFn: ({ id, isOnline }: { id: string; isOnline: boolean }) =>
       isOnline ? setChargerOffline(id) : setChargerOnline(id),
-    onSuccess: () => {
+    onSuccess: (_, { isOnline }) => {
       queryClient.invalidateQueries({ queryKey: ['host-chargers-full'] });
       queryClient.invalidateQueries({ queryKey: ['host-chargers'] });
+      showToast({
+        message: `Charger is now ${isOnline ? 'offline' : 'online'}.`,
+        type: isOnline ? 'info' : 'success',
+      });
     },
     onError: (err: any) => {
-      Alert.alert('Status Change Failed', err?.message || 'Could not update charger online status.');
+      showToast({ message: err?.message || 'Could not update charger online status.', type: 'error' });
     },
   });
 

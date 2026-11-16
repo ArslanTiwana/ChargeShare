@@ -37,6 +37,7 @@ import {
 } from '../../src/components';
 import { useCountdown } from '../../src/hooks/useCountdown';
 import { colors, radii, spacing } from '../../src/theme';
+import { showToast, showConfirm } from '../../src/store/ui-store';
 
 const TIMEZONE = 'Asia/Karachi';
 
@@ -79,9 +80,9 @@ export default function HostBookingDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ['host-booking-detail', id] });
       queryClient.invalidateQueries({ queryKey: ['host-bookings-list'] });
       queryClient.invalidateQueries({ queryKey: ['host-dashboard-bookings'] });
-      Alert.alert('Accepted', 'Booking accepted. Driver has been provided arrival directions.');
+      showToast({ message: 'Booking accepted! Driver notified with directions.', type: 'success' });
     },
-    onError: (err: any) => Alert.alert('Action Failed', err?.message || 'Could not accept booking.'),
+    onError: (err: any) => showToast({ message: err?.message || 'Could not accept booking.', type: 'error' }),
   });
 
   const startMutation = useMutation({
@@ -89,9 +90,9 @@ export default function HostBookingDetailScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['host-booking-detail', id] });
       queryClient.invalidateQueries({ queryKey: ['host-bookings-list'] });
-      Alert.alert('Charging Started', 'Session is active. You can enter meter readings anytime.');
+      showToast({ message: 'Charging session started. Enter readings anytime.', type: 'success' });
     },
-    onError: (err: any) => Alert.alert('Action Failed', err?.message || 'Could not start charging.'),
+    onError: (err: any) => showToast({ message: err?.message || 'Could not start charging.', type: 'error' }),
   });
 
   const cancelMutation = useMutation({
@@ -101,9 +102,9 @@ export default function HostBookingDetailScreen() {
       setCancelReason('');
       queryClient.invalidateQueries({ queryKey: ['host-booking-detail', id] });
       queryClient.invalidateQueries({ queryKey: ['host-bookings-list'] });
-      Alert.alert('Cancelled', 'Booking has been cancelled.');
+      showToast({ message: 'Booking has been cancelled.', type: 'info' });
     },
-    onError: (err: any) => Alert.alert('Action Failed', err?.message || 'Could not cancel booking.'),
+    onError: (err: any) => showToast({ message: err?.message || 'Could not cancel booking.', type: 'error' }),
   });
 
   const disputeMutation = useMutation({
@@ -113,9 +114,9 @@ export default function HostBookingDetailScreen() {
       setDisputeReason('');
       queryClient.invalidateQueries({ queryKey: ['host-booking-detail', id] });
       queryClient.invalidateQueries({ queryKey: ['host-bookings-list'] });
-      Alert.alert('Dispute Opened', 'Administrator has been notified to arbitrate this reading.');
+      showToast({ message: 'Dispute opened. Administrator has been notified.', type: 'info' });
     },
-    onError: (err: any) => Alert.alert('Action Failed', err?.message || 'Could not dispute reading.'),
+    onError: (err: any) => showToast({ message: err?.message || 'Could not dispute reading.', type: 'error' }),
   });
 
   const reviewMutation = useMutation({
@@ -123,9 +124,9 @@ export default function HostBookingDetailScreen() {
     onSuccess: () => {
       setReviewModalVisible(false);
       queryClient.invalidateQueries({ queryKey: ['host-booking-detail', id] });
-      Alert.alert('Thank You', 'Your rating for the driver has been submitted.');
+      showToast({ message: 'Your rating for the driver has been submitted.', type: 'success' });
     },
-    onError: (err: any) => Alert.alert('Review Failed', err?.message || 'Could not submit review.'),
+    onError: (err: any) => showToast({ message: err?.message || 'Could not submit review.', type: 'error' }),
   });
 
   const handleOpenPhoto = async (key?: string | null) => {
@@ -135,7 +136,7 @@ export default function HostBookingDetailScreen() {
       const res = await getReadUrl(key);
       setZoomedPhotoUrl(res.readUrl);
     } catch {
-      Alert.alert('Error', 'Unable to load meter photo.');
+      showToast({ message: 'Unable to load meter photo.', type: 'error' });
     } finally {
       setIsLoadingPhoto(false);
     }
@@ -354,11 +355,15 @@ export default function HostBookingDetailScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
+              <View style={[styles.modalIconBadge, { backgroundColor: colors.dangerLight }]}>
+                <Text style={{ fontSize: 24 }}>🚫</Text>
+              </View>
               <Text style={styles.modalTitle}>Cancel / Decline Booking</Text>
               <Text style={styles.modalSub}>Please provide a reason for cancellation:</Text>
               <TextInput
                 style={styles.reasonInput}
                 placeholder="Reason for cancellation..."
+                placeholderTextColor={colors.subtleText}
                 value={cancelReason}
                 onChangeText={setCancelReason}
                 multiline
@@ -392,6 +397,9 @@ export default function HostBookingDetailScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
+              <View style={[styles.modalIconBadge, { backgroundColor: colors.warningLight }]}>
+                <Text style={{ fontSize: 24 }}>⚠️</Text>
+              </View>
               <Text style={styles.modalTitle}>Open Dispute</Text>
               <Text style={styles.modalSub}>
                 Explain the issue with this charging session for administrative resolution:
@@ -399,6 +407,7 @@ export default function HostBookingDetailScreen() {
               <TextInput
                 style={styles.reasonInput}
                 placeholder="Dispute details..."
+                placeholderTextColor={colors.subtleText}
                 value={disputeReason}
                 onChangeText={setDisputeReason}
                 multiline
@@ -432,7 +441,11 @@ export default function HostBookingDetailScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
-              <View style={{ marginBottom: 12 }}>
+              <View style={[styles.modalIconBadge, { backgroundColor: colors.emeraldLight }]}>
+                <Text style={{ fontSize: 24 }}>⭐</Text>
+              </View>
+              <Text style={styles.modalTitle}>Rate Driver Experience</Text>
+              <View style={{ marginVertical: 12 }}>
                 <RatingStars
                   onSubmit={(r, c) => {
                     setRating(r);
@@ -700,17 +713,31 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: spacing.xl,
   },
   modalCard: {
     backgroundColor: colors.white,
     borderRadius: radii.xl,
-    padding: spacing.lg,
+    padding: spacing.xl,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
+    elevation: 10,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  modalIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+    alignSelf: 'center',
   },
   modalTitle: {
     fontSize: 17,

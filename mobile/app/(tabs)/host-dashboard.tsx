@@ -28,6 +28,7 @@ import {
 import { useCountdown } from '../../src/hooks/useCountdown';
 import { colors, radii, spacing } from '../../src/theme';
 import { BookingListItem } from '../../src/api/bookings';
+import { showToast } from '../../src/store/ui-store';
 
 const TIMEZONE = 'Asia/Karachi';
 
@@ -136,9 +137,13 @@ export default function HostDashboardScreen() {
   const handleAccept = async (id: string) => {
     try {
       await acceptBooking(id);
-      Alert.alert('Booking Accepted', 'The driver has been notified and provided directions to your charger.');
+      showToast({
+        title: 'Booking Accepted',
+        message: 'Driver has been notified and sent arrival directions.',
+        type: 'success',
+      });
     } catch (err: any) {
-      Alert.alert('Action Failed', err?.message || 'Could not accept booking.');
+      showToast({ message: err?.message || 'Could not accept booking.', type: 'error' });
     }
   };
 
@@ -148,9 +153,13 @@ export default function HostDashboardScreen() {
       await declineBooking({ bookingId: declineModalId, reason: declineReason.trim() });
       setDeclineModalId(null);
       setDeclineReason('');
-      Alert.alert('Request Declined', 'The booking request has been declined.');
+      showToast({
+        title: 'Request Declined',
+        message: 'The booking request has been declined.',
+        type: 'info',
+      });
     } catch (err: any) {
-      Alert.alert('Action Failed', err?.message || 'Could not decline booking.');
+      showToast({ message: err?.message || 'Could not decline booking.', type: 'error' });
     }
   };
 
@@ -371,6 +380,9 @@ export default function HostDashboardScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
+              <View style={[styles.modalIconBadge, { backgroundColor: colors.warningLight }]}>
+                <Text style={{ fontSize: 24 }}>🛑</Text>
+              </View>
               <Text style={styles.modalTitle}>Decline Booking Request</Text>
               <Text style={styles.modalSub}>
                 Provide an optional reason to let the driver know why you cannot host them at this time.
@@ -379,6 +391,7 @@ export default function HostDashboardScreen() {
               <TextInput
                 style={styles.modalInput}
                 placeholder="e.g. Personal car is currently charging, out of town"
+                placeholderTextColor={colors.subtleText}
                 value={declineReason}
                 onChangeText={setDeclineReason}
                 multiline
@@ -387,7 +400,7 @@ export default function HostDashboardScreen() {
 
               <View style={styles.modalBtnRow}>
                 <Button
-                  title="Cancel"
+                  title="Close"
                   variant="outline"
                   onPress={() => setDeclineModalId(null)}
                   style={{ flex: 1 }}
@@ -756,17 +769,31 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: spacing.xl,
   },
   modalBox: {
     backgroundColor: colors.white,
     borderRadius: radii.xl,
-    padding: spacing.lg,
+    padding: spacing.xl,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
+    elevation: 10,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  modalIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+    alignSelf: 'center',
   },
   modalTitle: {
     fontSize: 18,

@@ -20,6 +20,7 @@ import {
   registerForPushNotificationsAsync,
   handleNotificationNavigation,
 } from '../src/utils/notifications';
+import { ToastBanner, GlobalConfirmModal } from '../src/components';
 import { getInitialRoute } from './index';
 
 const queryClient = new QueryClient({
@@ -189,6 +190,8 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
         <AuthGate />
+        <ToastBanner />
+        <GlobalConfirmModal />
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

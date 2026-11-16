@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/auth-store';
 import { applyHostApi } from '../api/auth';
+import { showToast } from '../store/ui-store';
 import { Button } from './Button';
 import { TextField } from './TextField';
 import { colors, radii, spacing } from '../theme';
@@ -112,7 +113,7 @@ export function HostStatusGate({ children }: HostStatusGateProps) {
         phone: phone.trim(),
         hostStatus: 'PENDING',
       });
-      Alert.alert('Application Submitted', res.message);
+      showToast({ title: 'Application Submitted', message: res.message, type: 'success' });
     } catch (err: any) {
       setApplyError(err?.message || 'Could not submit host application.');
     } finally {

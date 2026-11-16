@@ -19,6 +19,7 @@ import { Button } from '../../src/components/Button';
 import { formatPaisaToRupees } from '../../src/components/MoneyText';
 import { rupeeStringToPaisa } from '../../src/utils/money';
 import { uploadImageWithSignedUrl } from '../../src/utils/upload-helper';
+import { showToast } from '../../src/store/ui-store';
 import { colors, radii, spacing } from '../../src/theme';
 
 export default function TopupScreen() {
@@ -70,9 +71,10 @@ export default function TopupScreen() {
         );
 
         setScreenshotKey(key);
+        showToast({ message: 'Receipt screenshot uploaded.', type: 'success' });
       }
     } catch (err: any) {
-      Alert.alert('Upload Failed', err?.message || 'Could not upload payment screenshot.');
+      showToast({ message: err?.message || 'Could not upload payment screenshot.', type: 'error' });
     } finally {
       setIsUploading(false);
     }
@@ -113,11 +115,12 @@ export default function TopupScreen() {
       queryClient.invalidateQueries({ queryKey: ['host-topups-list'] });
       queryClient.invalidateQueries({ queryKey: ['host-wallet'] });
       queryClient.invalidateQueries({ queryKey: ['host-wallet-full'] });
-      Alert.alert(
-        'Top-up Submitted',
-        'Your top-up request has been submitted for admin verification. Funds will be credited once confirmed.',
-        [{ text: 'OK', onPress: () => router.replace('/host-wallet') }]
-      );
+      showToast({
+        title: 'Top-up Submitted',
+        message: 'Your top-up request has been submitted for admin verification.',
+        type: 'success',
+      });
+      router.replace('/host-wallet');
     },
     onError: (err: any) => {
       setErrorText(err?.message || 'Failed to submit top-up.');
