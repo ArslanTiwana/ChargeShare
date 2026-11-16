@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Charger" ADD COLUMN "publicLat" DOUBLE PRECISION,
+ADD COLUMN "publicLng" DOUBLE PRECISION;

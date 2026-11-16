@@ -1,0 +1,317 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum PreferredMode {
+  DRIVER
+  HOST
+}
+
+enum HostStatus {
+  NONE
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum ConnectorType {
+  TYPE2
+  CCS2
+  CHADEMO
+  GBT
+  SOCKET_3PIN
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BookingStatus {
+  REQUESTED
+  ACCEPTED
+  CHARGING
+  COMPLETED
+  CONFIRMED
+  DECLINED
+  CANCELLED
+  EXPIRED
+  DISPUTED
+}
+
+enum WalletTransactionType {
+  TOPUP
+  COMMISSION
+  ADJUSTMENT
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+}
+
+enum EmailTokenType {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String?
+  googleId        String?    @unique
+  name            String
+  phone           String?
+  avatarUrl       String?
+  role            UserRole       @default(USER)
+  preferredMode   PreferredMode?
+  hostStatus      HostStatus     @default(NONE)
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  chargers           Charger[]
+  driverBookings     Booking[]           @relation("DriverBookings")
+  reviewsGiven       Review[]            @relation("ReviewsGiven")
+  reviewsReceived    Review[]            @relation("ReviewsReceived")
+  walletTransactions WalletTransaction[]
+  walletTopups       WalletTopup[]       @relation("HostTopups")
+  reviewedTopups     WalletTopup[]       @relation("ReviewedTopups")
+  openedDisputes     Dispute[]           @relation("DisputesOpened")
+  resolvedDisputes   Dispute[]           @relation("DisputesResolved")
+  refreshTokens      RefreshToken[]
+  emailTokens        EmailToken[]
+  sessionEdits       SessionEdit[]
+  adminAuditLogs     AdminAuditLog[]
+  cancelledBookings  Booking[]           @relation("CancelledBookings")
+
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model EmailToken {
+  id         String         @id @default(cuid())
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       EmailTokenType
+  tokenHash  String         @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model Charger {
+  id               String                               @id @default(cuid())
+  hostId           String
+  host             User                                 @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  title            String
+  powerKw          Decimal                              @db.Decimal(5, 2)
+  connectorType    ConnectorType
+  pricePerKwhPaisa Int
+  areaLabel        String
+  addressLine      String
+  notes            String?
+  meterInstalled   Boolean                              @default(false)
+  isOnline         Boolean                              @default(false)
+  approvalStatus   ApprovalStatus                       @default(PENDING)
+  rejectionReason  String?
+  location         Unsupported("geography(Point,4326)")
+  publicLat        Float?
+  publicLng        Float?
+  createdAt        DateTime                             @default(now())
+  updatedAt        DateTime                             @updatedAt
+
+  bookings Booking[]
+
+  @@index([hostId])
+  @@index([approvalStatus, isOnline])
+  @@index([location], type: Gist)
+}
+
+model Booking {
+  id                String        @id @default(cuid())
+  driverId          String
+  driver            User          @relation("DriverBookings", fields: [driverId], references: [id], onDelete: Cascade)
+  chargerId         String
+  charger           Charger       @relation(fields: [chargerId], references: [id], onDelete: Cascade)
+  startsAt          DateTime
+  endsAt            DateTime
+  status            BookingStatus @default(REQUESTED)
+  rateSnapshotPaisa Int?
+  estimatedKwh      Decimal?      @db.Decimal(6, 2)
+  expiresAt         DateTime?
+  cancelReason      String?
+  cancelledById     String?
+  cancelledBy       User?         @relation("CancelledBookings", fields: [cancelledById], references: [id], onDelete: SetNull)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  session            Session?
+  reviews            Review[]
+  dispute            Dispute?
+  walletTransactions WalletTransaction[]
+
+  @@index([driverId])
+  @@index([chargerId])
+  @@index([status])
+  @@index([startsAt, endsAt])
+  @@index([cancelledById])
+}
+
+model Session {
+  id                 String        @id @default(cuid())
+  bookingId          String        @unique
+  booking            Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kwhDelivered       Decimal       @db.Decimal(8, 3)
+  rateSnapshotPaisa  Int
+  totalPaisa         Int
+  commissionPaisa    Int
+  autoConfirmed      Boolean       @default(false)
+  meterStartPhotoKey String?
+  meterEndPhotoKey   String?
+  hostEnteredAt      DateTime?
+  driverConfirmedAt  DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  edits              SessionEdit[]
+}
+
+model SessionEdit {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  previousKwh Decimal  @db.Decimal(8, 3)
+  newKwh      Decimal  @db.Decimal(8, 3)
+  reason      String?
+  editedById  String
+  editedBy    User     @relation(fields: [editedById], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([editedById])
+}
+
+model WalletTransaction {
+  id          String                @id @default(cuid())
+  hostId      String
+  host        User                  @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  type        WalletTransactionType
+  amountPaisa Int
+  bookingId   String?
+  booking     Booking?              @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  topupId     String?
+  topup       WalletTopup?          @relation(fields: [topupId], references: [id], onDelete: SetNull)
+  note        String?
+  createdAt   DateTime              @default(now())
+
+  @@index([hostId])
+  @@index([bookingId])
+  @@index([topupId])
+}
+
+model WalletTopup {
+  id            String         @id @default(cuid())
+  hostId        String
+  host          User           @relation("HostTopups", fields: [hostId], references: [id], onDelete: Cascade)
+  amountPaisa   Int
+  screenshotKey String
+  reference     String?
+  status        ApprovalStatus @default(PENDING)
+  reviewedById  String?
+  reviewedBy    User?          @relation("ReviewedTopups", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  walletTransactions WalletTransaction[]
+
+  @@index([hostId])
+  @@index([status])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId String
+  reviewee   User     @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([bookingId, reviewerId])
+  @@index([revieweeId])
+  @@index([reviewerId])
+}
+
+model Dispute {
+  id           String        @id @default(cuid())
+  bookingId    String        @unique
+  booking      Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  openedById   String
+  openedBy     User          @relation("DisputesOpened", fields: [openedById], references: [id], onDelete: Cascade)
+  reason       String
+  status       DisputeStatus @default(OPEN)
+  resolution   String?
+  resolvedById String?
+  resolvedBy   User?         @relation("DisputesResolved", fields: [resolvedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+}
+
+model AppConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
