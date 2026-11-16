@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import ProfileScreen from '../app/(app)/profile';
+import ProfileScreen from '../app/(tabs)/profile';
 import { useAuthStore } from '../src/store/auth-store';
 
 jest.mock('expo-router', () => ({

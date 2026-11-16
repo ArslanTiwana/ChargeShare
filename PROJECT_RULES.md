@@ -77,6 +77,7 @@ Side states: `declined`, `cancelled`, `expired`, `disputed`.
 ```
 - `mobile/` is excluded in root `tsconfig.json` and listed in `.vercelignore`.
 - `mobile/metro.config.js` uses `watchFolders` to reach `../shared`.
+- `mobile/app`: Root `<Stack>` in `_layout.tsx` containing `(auth)`, `(tabs)`, and root Stack detail screens (`charger/[id]`, `bookings/[id]`, `host-booking/[id]`, `host-booking/[id]/meter`, `host-charger/new`, `host-charger/[id]`, `host-wallet/topup`, `help`). `(tabs)` contains only real tabs with `href: null` role toggling. All navigation uses typed router calls.
 
 ## 7. Data model
 Tables: `User`, `RefreshToken`, `EmailToken`, `Charger` (PostGIS geography point), `Booking`, `Session` (kWh, photos, confirmations), `WalletTransaction` (append-only ledger), `WalletTopup` (screenshot + approval status), `Review`, `Dispute`, `AppConfig`.

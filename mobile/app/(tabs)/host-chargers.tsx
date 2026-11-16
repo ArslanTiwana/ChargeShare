@@ -54,7 +54,7 @@ export default function HostChargersScreen() {
           <Text style={styles.pageTitle}>My Listed Chargers</Text>
           <TouchableOpacity
             style={styles.addBtn}
-            onPress={() => router.push('/(app)/host-charger/new')}
+            onPress={() => router.push('/host-charger/new')}
             accessibilityRole="button"
             accessibilityLabel="Add new charger"
           >
@@ -74,7 +74,7 @@ export default function HostChargersScreen() {
             title="No Chargers Found"
             description="You have not added any residential chargers to your profile yet."
             actionTitle="Add Your First Charger"
-            onAction={() => router.push('/(app)/host-charger/new')}
+            onAction={() => router.push('/host-charger/new')}
           />
         ) : (
           <FlatList
@@ -154,7 +154,12 @@ export default function HostChargersScreen() {
 
                   <TouchableOpacity
                     style={styles.editBtn}
-                    onPress={() => router.push(`/(app)/host-charger/${item.id}`)}
+                    onPress={() => {
+                      router.push({
+                        pathname: '/host-charger/[id]',
+                        params: { id: item.id },
+                      });
+                    }}
                     accessibilityRole="button"
                     accessibilityLabel="Edit charger"
                   >

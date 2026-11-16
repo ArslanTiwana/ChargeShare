@@ -13,6 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#059669"
       },
       "package": "com.chargeshare.app",
@@ -46,7 +47,7 @@
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 36,
+            "compileSdkVersion": 37,
             "targetSdkVersion": 36
           }
         }
@@ -63,6 +64,9 @@
       "eas": {
         "projectId": "2daee90a-325e-4329-bfb5-0d3e82708a41"
       }
+    },
+    "experiments": {
+      "typedRoutes": true
     },
     "owner": "muhammadarslan0468"
   }

@@ -54,11 +54,16 @@ export default function BookingsScreen() {
   }, [allBookings, tab]);
 
   const handleOpenBooking = (bookingId: string) => {
-    router.push(`/(app)/bookings/${bookingId}`);
+    router.push({
+      pathname: '/bookings/[id]',
+      params: { id: bookingId },
+    });
   };
 
   const renderBookingCard = ({ item }: { item: BookingListItem }) => {
-    const startStr = formatInTimeZone(new Date(item.startsAt), TIMEZONE, 'EEE, d MMM yyyy &bull; HH:mm');
+    const datePart = formatInTimeZone(new Date(item.startsAt), TIMEZONE, 'EEE, d MMM yyyy');
+    const timePart = formatInTimeZone(new Date(item.startsAt), TIMEZONE, 'HH:mm');
+    const startStr = `${datePart} • ${timePart}`;
     const endStr = formatInTimeZone(new Date(item.endsAt), TIMEZONE, 'HH:mm');
 
     return (

@@ -336,7 +336,7 @@ export default function ProfileScreen() {
       <Card style={styles.helpCard}>
         <TouchableOpacity
           style={styles.helpRow}
-          onPress={() => router.push('/(app)/help')}
+          onPress={() => router.push('/help')}
           accessibilityRole="button"
         >
           <View style={styles.helpTextContainer}>

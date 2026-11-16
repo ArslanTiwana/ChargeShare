@@ -31,9 +31,9 @@ export default function SignInScreen() {
     if (!user.preferredMode) {
       router.replace('/(auth)/choose-role');
     } else if (user.preferredMode === 'HOST') {
-      router.replace('/(app)/host-dashboard');
+      router.replace('/host-dashboard');
     } else {
-      router.replace('/(app)/find');
+      router.replace('/find');
     }
   };
 

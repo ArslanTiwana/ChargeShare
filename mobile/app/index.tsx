@@ -18,14 +18,14 @@ export function getInitialRoute(
     return '/(auth)/choose-role';
   }
 
-  // Host mode: /(app)/host-dashboard handles NONE (onboarding), PENDING (waiting),
+  // Host mode: /host-dashboard handles NONE (onboarding), PENDING (waiting),
   // SUSPENDED (support notice), and APPROVED (dashboard) via HostStatusGate
   if (user.preferredMode === 'HOST') {
-    return '/(app)/host-dashboard';
+    return '/host-dashboard';
   }
 
   // Driver mode default
-  return '/(app)/find';
+  return '/find';
 }
 
 export default function Index() {

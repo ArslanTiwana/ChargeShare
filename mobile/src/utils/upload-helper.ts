@@ -59,6 +59,7 @@ export async function uploadImageWithSignedUrl(
         body: JSON.stringify({
           purpose,
           mimeType: 'image/jpeg',
+          fileSizeBytes: blob.size,
           sizeBytes: blob.size,
         }),
       });
@@ -79,9 +80,12 @@ export async function uploadImageWithSignedUrl(
 
       if (onProgress) onProgress(1.0);
       return signRes.key;
-    } catch (err) {
+    } catch (err: any) {
+      if (__DEV__) {
+        console.warn(`[UploadHelper] Attempt ${attempts} failed:`, err?.message || err);
+      }
       if (attempts >= maxAttempts) {
-        throw new Error('Failed to upload image. Please check your connection and try again.');
+        throw new Error(err?.message || 'Failed to upload image. Please check your connection and try again.');
       }
     }
   }

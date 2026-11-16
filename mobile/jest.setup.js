@@ -56,11 +56,41 @@ jest.mock('react-native-maps', () => {
 // Mock @gorhom/bottom-sheet
 jest.mock('@gorhom/bottom-sheet', () => {
   const React = require('react');
-  const { View } = require('react-native');
+  const { View, TouchableOpacity, FlatList } = require('react-native');
   return {
     __esModule: true,
     default: React.forwardRef((props, ref) => <View {...props} />),
     BottomSheetView: (props) => <View {...props} />,
     BottomSheetBackdrop: (props) => <View {...props} />,
+    BottomSheetFlatList: FlatList,
+    TouchableOpacity: TouchableOpacity,
   };
 });
+
+// Mock @sentry/react-native
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  wrap: (comp) => comp,
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
+}));
+
+// Mock @react-native-google-signin/google-signin
+jest.mock('@react-native-google-signin/google-signin', () => ({
+  GoogleSignin: {
+    configure: jest.fn(),
+    hasPlayServices: jest.fn(() => Promise.resolve(true)),
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+  },
+  statusCodes: {},
+}));
+
+// Mock expo-location
+jest.mock('expo-location', () => ({
+  getForegroundPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
+  requestForegroundPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
+  getCurrentPositionAsync: jest.fn(async () => ({
+    coords: { latitude: 33.6844, longitude: 73.0479 },
+  })),
+}));

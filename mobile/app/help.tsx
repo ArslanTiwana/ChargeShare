@@ -8,11 +8,11 @@ import {
   Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors, spacing, radii } from '../../src/theme';
-import { Button, TextField, Toast, Card } from '../../src/components';
-import { useAuthStore } from '../../src/store/auth-store';
-import { apiFetch } from '../../src/api/client';
-import { ApiError } from '../../src/api/types';
+import { colors, spacing, radii } from '../src/theme';
+import { Button, TextField, Toast, Card } from '../src/components';
+import { useAuthStore } from '../src/store/auth-store';
+import { apiFetch } from '../src/api/client';
+import { ApiError } from '../src/api/types';
 
 const APP_VERSION = '1.0.0';
 const WEB_BASE = 'https://chargeshare.pk';

@@ -23,7 +23,7 @@ import {
   disputeBooking,
   createReview,
   getReadUrl,
-} from '../../../src/api/bookings';
+} from '../../src/api/bookings';
 import {
   HostStatusGate,
   StatusTracker,
@@ -34,9 +34,9 @@ import {
   RatingStars,
   Skeleton,
   ErrorState,
-} from '../../../src/components';
-import { useCountdown } from '../../../src/hooks/useCountdown';
-import { colors, radii, spacing } from '../../../src/theme';
+} from '../../src/components';
+import { useCountdown } from '../../src/hooks/useCountdown';
+import { colors, radii, spacing } from '../../src/theme';
 
 const TIMEZONE = 'Asia/Karachi';
 
@@ -267,7 +267,7 @@ export default function HostBookingDetailScreen() {
                 </Text>
                 <TouchableOpacity
                   style={styles.reviseButton}
-                  onPress={() => router.push(`/(app)/host-booking/${id}/meter`)}
+                  onPress={() => router.push({ pathname: '/host-booking/[id]/meter', params: { id } })}
                 >
                   <Text style={styles.reviseButtonText}>✏️ Revise Meter Reading</Text>
                 </TouchableOpacity>
@@ -317,7 +317,7 @@ export default function HostBookingDetailScreen() {
             <View style={styles.actionCol}>
               <Button
                 title="Enter Meter Reading"
-                onPress={() => router.push(`/(app)/host-booking/${id}/meter`)}
+                onPress={() => router.push({ pathname: '/host-booking/[id]/meter', params: { id } })}
                 style={styles.mainActionBtn}
               />
             </View>

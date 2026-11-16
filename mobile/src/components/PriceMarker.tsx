@@ -26,8 +26,11 @@ export const PriceMarker = memo(function PriceMarker({
     <Marker
       identifier={id}
       coordinate={{ latitude: lat, longitude: lng }}
-      onPress={onPress}
-      tracksViewChanges={false}
+      onPress={(e) => {
+        e?.stopPropagation?.();
+        onPress();
+      }}
+      tracksViewChanges={isSelected}
     >
       <View style={[styles.pill, isSelected && styles.pillSelected]}>
         <Text style={[styles.text, isSelected && styles.textSelected]}>

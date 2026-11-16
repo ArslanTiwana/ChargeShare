@@ -40,7 +40,10 @@ ChargeShare: a Pakistan marketplace for residential EV chargers. One Next.js app
 
 ## Mobile rules
 - Expo Router, TanStack Query for server data, Zustand for small local state.
-- Follow the design in `PROJECT_RULES.md` section 8: light Uber/Careem style, Inter font, muted map, bottom sheet, one primary button per screen.
+- Route structure follows Expo Router standard: Root `<Stack>` in `mobile/app/_layout.tsx` containing `(auth)` group, `(tabs)` group, and root-level Stack detail screens (`charger/[id]`, `bookings/[id]`, `host-booking/[id]`, `host-booking/[id]/meter`, `host-charger/new`, `host-charger/[id]`, `host-wallet/topup`, `help`).
+- `(tabs)` layout contains strictly the 7 real tab screens (`find`, `bookings`, `host-dashboard`, `host-bookings`, `host-chargers`, `host-wallet`, `profile`), hiding tabs of the opposite role using `href: null`. Detail screens must NEVER be placed inside `<Tabs>`.
+- Typed routes enabled (`experiments.typedRoutes: true` in `app.json`). Navigation must always use typed router calls: `router.push({ pathname: '/charger/[id]', params: { id } })`, never untyped `navigation.navigate(...)` or unparameterized template strings.
+- Follow the design in `PROJECT_RULES.md` section 8/9: light Uber/Careem style, Inter font, muted map, bottom sheet, one primary button per screen.
 - Android first. Touch targets at least 44 px. Use real buttons and labels for accessibility. Targets Android 16 (API 36).
 - Map: MapLibre or react-native-maps. No Google Places API. Hosts drop a pin; directions open the external maps app.
 

@@ -11,15 +11,15 @@ import {
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { getPublicConfig } from '../../../src/api/config';
-import { getTopups, createTopup } from '../../../src/api/wallet';
-import { HostStatusGate } from '../../../src/components/HostStatusGate';
-import { TextField } from '../../../src/components/TextField';
-import { Button } from '../../../src/components/Button';
-import { formatPaisaToRupees } from '../../../src/components/MoneyText';
-import { rupeeStringToPaisa } from '../../../src/utils/money';
-import { uploadImageWithSignedUrl } from '../../../src/utils/upload-helper';
-import { colors, radii, spacing } from '../../../src/theme';
+import { getPublicConfig } from '../../src/api/config';
+import { getTopups, createTopup } from '../../src/api/wallet';
+import { HostStatusGate } from '../../src/components/HostStatusGate';
+import { TextField } from '../../src/components/TextField';
+import { Button } from '../../src/components/Button';
+import { formatPaisaToRupees } from '../../src/components/MoneyText';
+import { rupeeStringToPaisa } from '../../src/utils/money';
+import { uploadImageWithSignedUrl } from '../../src/utils/upload-helper';
+import { colors, radii, spacing } from '../../src/theme';
 
 export default function TopupScreen() {
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function TopupScreen() {
     config?.topupInstructions ||
     'Transfer funds to Easypaisa / JazzCash account: 0300-1234567 (Title: ChargeShare Admin). Save your transaction ID and upload a screenshot.';
 
-  const pendingCount = (topupsData?.topups || []).filter((t) => t.status === 'PENDING').length;
+  const pendingCount = (topupsData?.topups || []).filter((t: any) => t.status === 'PENDING').length;
   const isMaxPendingReached = pendingCount >= 3;
 
   const handlePickScreenshot = async () => {
@@ -66,7 +66,7 @@ export default function TopupScreen() {
         const key = await uploadImageWithSignedUrl(
           res.assets[0].uri,
           'TOPUP_SCREENSHOT',
-          (p) => setUploadProgress(p)
+          (p: number) => setUploadProgress(p)
         );
 
         setScreenshotKey(key);
@@ -116,7 +116,7 @@ export default function TopupScreen() {
       Alert.alert(
         'Top-up Submitted',
         'Your top-up request has been submitted for admin verification. Funds will be credited once confirmed.',
-        [{ text: 'OK', onPress: () => router.replace('/(app)/host-wallet') }]
+        [{ text: 'OK', onPress: () => router.replace('/host-wallet') }]
       );
     },
     onError: (err: any) => {

@@ -6,9 +6,9 @@ import { Platform } from 'react-native';
 
 describe('Mobile Push Notifications & Deep Linking', () => {
   it('routes booking lifecycle notifications to booking details screen', () => {
-    const pushedRoutes: string[] = [];
+    const pushedRoutes: any[] = [];
     const mockRouter = {
-      push: (url: string) => pushedRoutes.push(url),
+      push: (url: any) => pushedRoutes.push(url),
     };
 
     const bookingEvents = [
@@ -30,37 +30,43 @@ describe('Mobile Push Notifications & Deep Linking', () => {
         { type: eventType, bookingId: 'b_test_123' },
         mockRouter
       );
-      expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/bookings/b_test_123');
+      expect(pushedRoutes[pushedRoutes.length - 1]).toEqual({
+        pathname: '/bookings/[id]',
+        params: { id: 'b_test_123' },
+      });
     }
   });
 
   it('routes wallet and top-up events to host wallet screen', () => {
-    const pushedRoutes: string[] = [];
+    const pushedRoutes: any[] = [];
     const mockRouter = {
-      push: (url: string) => pushedRoutes.push(url),
+      push: (url: any) => pushedRoutes.push(url),
     };
 
     handleNotificationNavigation({ type: 'TOPUP_APPROVED' }, mockRouter);
-    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/wallet');
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/host-wallet');
 
     handleNotificationNavigation({ type: 'TOPUP_REJECTED' }, mockRouter);
-    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/wallet');
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/host-wallet');
 
     handleNotificationNavigation({ type: 'WALLET_LOW_BALANCE' }, mockRouter);
-    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/wallet');
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/host-wallet');
   });
 
   it('routes charger approval events to chargers screen', () => {
-    const pushedRoutes: string[] = [];
+    const pushedRoutes: any[] = [];
     const mockRouter = {
-      push: (url: string) => pushedRoutes.push(url),
+      push: (url: any) => pushedRoutes.push(url),
     };
 
     handleNotificationNavigation({ type: 'CHARGER_APPROVED', chargerId: 'c_xyz' }, mockRouter);
-    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/chargers/c_xyz');
+    expect(pushedRoutes[pushedRoutes.length - 1]).toEqual({
+      pathname: '/host-charger/[id]',
+      params: { id: 'c_xyz' },
+    });
 
     handleNotificationNavigation({ type: 'CHARGER_REJECTED' }, mockRouter);
-    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/chargers');
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe('/host-chargers');
   });
 
   it('sets up notification channel safely on Android', async () => {

@@ -102,7 +102,7 @@ export async function unregisterPushTokenAsync(): Promise<void> {
 
 export function handleNotificationNavigation(
   data: Record<string, unknown> | undefined,
-  router: { push: (url: string) => void }
+  router: { push: (url: any) => void }
 ): void {
   if (!data || !data.type) return;
 
@@ -126,14 +126,14 @@ export function handleNotificationNavigation(
     ].includes(type) &&
     bookingId
   ) {
-    router.push(`/bookings/${bookingId}`);
+    router.push({ pathname: '/bookings/[id]', params: { id: bookingId } });
   } else if (['TOPUP_APPROVED', 'TOPUP_REJECTED', 'WALLET_LOW_BALANCE'].includes(type)) {
-    router.push('/wallet');
+    router.push('/host-wallet');
   } else if (['CHARGER_APPROVED', 'CHARGER_REJECTED'].includes(type)) {
     if (chargerId) {
-      router.push(`/chargers/${chargerId}`);
+      router.push({ pathname: '/host-charger/[id]', params: { id: chargerId } });
     } else {
-      router.push('/chargers');
+      router.push('/host-chargers');
     }
   }
 }

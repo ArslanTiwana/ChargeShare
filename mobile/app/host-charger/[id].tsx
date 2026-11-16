@@ -2,11 +2,11 @@ import React from 'react';
 import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getChargerDetail, updateCharger, UpdateChargerInput } from '../../../src/api/chargers';
-import { HostStatusGate } from '../../../src/components/HostStatusGate';
-import { ChargerForm, ChargerFormData } from '../../../src/components/ChargerForm';
-import { ErrorState } from '../../../src/components/ErrorState';
-import { colors } from '../../../src/theme';
+import { getChargerDetail, updateCharger, UpdateChargerInput } from '../../src/api/chargers';
+import { HostStatusGate } from '../../src/components/HostStatusGate';
+import { ChargerForm, ChargerFormData } from '../../src/components/ChargerForm';
+import { ErrorState } from '../../src/components/ErrorState';
+import { colors } from '../../src/theme';
 
 export default function EditChargerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -33,9 +33,9 @@ export default function ChooseRoleScreen() {
 
       // 3. Route according to selected mode
       if (selectedMode === 'HOST') {
-        router.replace('/(app)/host-dashboard');
+        router.replace('/host-dashboard');
       } else {
-        router.replace('/(app)/find');
+        router.replace('/find');
       }
     } finally {
       setIsSubmitting(false);

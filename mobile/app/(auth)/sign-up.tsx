@@ -67,9 +67,9 @@ export default function SignUpScreen() {
       setAuth(data);
 
       if (preferredMode === 'HOST') {
-        router.replace('/(app)/host-dashboard');
+        router.replace('/host-dashboard');
       } else {
-        router.replace('/(app)/find');
+        router.replace('/find');
       }
     } catch (err) {
       if (err instanceof ApiError) {

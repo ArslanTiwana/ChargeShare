@@ -115,4 +115,16 @@ describe('Phase 5b: Slot Generation and Availability in Asia/Karachi (UTC+5)', (
     const slotEnd = new Date(slot23.getTime() + 2 * 3600 * 1000);
     expect(formatInTimeZone(slotEnd, TIMEZONE, 'yyyy-MM-dd HH:mm')).toBe('2026-11-21 01:00');
   });
+
+  it('formats booking card dates with bullet separator safely without throwing unescaped latin character RangeError', () => {
+    const date = new Date('2026-11-20T10:00:00.000Z');
+    const datePart = formatInTimeZone(date, TIMEZONE, 'EEE, d MMM yyyy');
+    const timePart = formatInTimeZone(date, TIMEZONE, 'HH:mm');
+    const combined = `${datePart} • ${timePart}`;
+
+    expect(combined).toMatch(/Fri, 20 Nov 2026 • 15:00/);
+    expect(() => {
+      formatInTimeZone(date, TIMEZONE, 'EEE, d MMM yyyy');
+    }).not.toThrow();
+  });
 });

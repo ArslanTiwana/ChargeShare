@@ -188,7 +188,7 @@ export default function HostDashboardScreen() {
                   </Text>
                   <TouchableOpacity
                     style={styles.bannerTopupBtn}
-                    onPress={() => router.push('/(app)/host-wallet/topup')}
+                    onPress={() => router.push('/host-wallet/topup')}
                   >
                     <Text style={styles.bannerTopupBtnText}>Top Up Now</Text>
                   </TouchableOpacity>
@@ -214,7 +214,7 @@ export default function HostDashboardScreen() {
               <View style={styles.walletHeader}>
                 <Text style={styles.walletLabel}>PREPAID WALLET BALANCE</Text>
                 <TouchableOpacity
-                  onPress={() => router.push('/(app)/host-wallet')}
+                  onPress={() => router.push('/host-wallet')}
                   accessibilityRole="button"
                   accessibilityLabel="View wallet transactions"
                 >
@@ -234,7 +234,7 @@ export default function HostDashboardScreen() {
               <View style={styles.walletBtnRow}>
                 <Button
                   title="Top Up Wallet"
-                  onPress={() => router.push('/(app)/host-wallet/topup')}
+                  onPress={() => router.push('/host-wallet/topup')}
                   style={styles.walletTopupBtn}
                 />
               </View>
@@ -271,7 +271,7 @@ export default function HostDashboardScreen() {
             {/* Today's Active / Upcoming Bookings */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Active & Upcoming Today</Text>
-              <TouchableOpacity onPress={() => router.push('/(app)/host-bookings')}>
+              <TouchableOpacity onPress={() => router.push('/host-bookings')}>
                 <Text style={styles.seeAllText}>See all ›</Text>
               </TouchableOpacity>
             </View>
@@ -285,7 +285,7 @@ export default function HostDashboardScreen() {
                 <TouchableOpacity
                   key={b.id}
                   style={styles.activeBookingCard}
-                  onPress={() => router.push(`/(app)/host-booking/${b.id}`)}
+                  onPress={() => router.push({ pathname: '/host-booking/[id]', params: { id: b.id } })}
                   activeOpacity={0.7}
                 >
                   <View style={styles.activeBookingTop}>
@@ -306,7 +306,7 @@ export default function HostDashboardScreen() {
             {/* Chargers Quick Overview */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>My Chargers</Text>
-              <TouchableOpacity onPress={() => router.push('/(app)/host-chargers')}>
+              <TouchableOpacity onPress={() => router.push('/host-chargers')}>
                 <Text style={styles.seeAllText}>Manage ›</Text>
               </TouchableOpacity>
             </View>
@@ -316,7 +316,7 @@ export default function HostDashboardScreen() {
                 title="No Chargers Added"
                 description="List your home EV charger to start accepting bookings and earning."
                 actionTitle="Add Charger"
-                onAction={() => router.push('/(app)/host-charger/new')}
+                onAction={() => router.push('/host-charger/new')}
               />
             ) : (
               chargers.map((c) => (

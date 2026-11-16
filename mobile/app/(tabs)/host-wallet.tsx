@@ -123,7 +123,7 @@ export default function HostWalletScreen() {
 
           <Button
             title="Top Up Wallet"
-            onPress={() => router.push('/(app)/host-wallet/topup')}
+            onPress={() => router.push('/host-wallet/topup')}
             style={styles.topupBtn}
           />
         </View>

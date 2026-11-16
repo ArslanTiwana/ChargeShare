@@ -28,7 +28,7 @@ export function SlotPicker({
   onSelectSlot,
   bookedSlots,
   minDurationHours = 1,
-  maxDurationHours = 4,
+  maxDurationHours = 3,
   isLoading = false,
 }: SlotPickerProps) {
   // 1. Generate next 7 days in Asia/Karachi
@@ -97,13 +97,15 @@ export function SlotPicker({
     return list;
   }, [selectedDate, selectedDurationHours, bookedSlots]);
 
-  // Duration options (e.g. 1h, 2h, 3h, 4h)
+  // Duration options: strictly 1 hr, 2 hr, 3 hr
   const durations = useMemo(() => {
+    const min = Math.max(minDurationHours, 1);
+    const max = Math.min(Math.max(maxDurationHours, min), 3);
     const list: number[] = [];
-    for (let h = minDurationHours; h <= maxDurationHours; h++) {
+    for (let h = min; h <= max; h++) {
       list.push(h);
     }
-    return list;
+    return list.length > 0 ? list : [1, 2, 3];
   }, [minDurationHours, maxDurationHours]);
 
   return (
@@ -149,10 +151,10 @@ export function SlotPicker({
               onPress={() => onSelectDuration(h)}
               style={[styles.durationChip, isSelected && styles.durationChipSelected]}
               accessibilityRole="button"
-              accessibilityLabel={`${h} hour duration`}
+              accessibilityLabel={`${h} hr duration`}
             >
               <Text style={[styles.durationText, isSelected && styles.durationTextSelected]}>
-                {h} {h === 1 ? 'hour' : 'hours'}
+                {h} hr
               </Text>
             </TouchableOpacity>
           );

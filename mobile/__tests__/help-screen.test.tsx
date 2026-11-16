@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import HelpScreen from '../app/(app)/help';
+import HelpScreen from '../app/help';
 import { useAuthStore } from '../src/store/auth-store';
 
 jest.mock('expo-router', () => ({

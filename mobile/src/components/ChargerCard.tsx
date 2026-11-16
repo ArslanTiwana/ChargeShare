@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { NearbyCharger } from '../api/chargers';
 import { formatPaisaToRupees } from './MoneyText';
 import { colors, radii, spacing } from '../theme';
@@ -20,7 +21,7 @@ export function ChargerCard({ charger, isSelected = false, onPress }: ChargerCar
 
   return (
     <TouchableOpacity
-      activeOpacity={0.85}
+      activeOpacity={0.7}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${charger.title}, ${charger.areaLabel}, ${charger.powerKw} kilowatts`}
@@ -60,6 +61,10 @@ export function ChargerCard({ charger, isSelected = false, onPress }: ChargerCar
             <Text style={styles.badgeDistanceText}>{formattedDistance}</Text>
           </View>
         )}
+      </View>
+
+      <View style={styles.actionRow}>
+        <Text style={styles.actionText}>View details & book slots →</Text>
       </View>
     </TouchableOpacity>
   );
@@ -123,6 +128,20 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     marginTop: spacing.xs,
+  },
+  actionRow: {
+    marginTop: spacing.xs,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.emeraldDark,
   },
   badge: {
     backgroundColor: colors.surface,

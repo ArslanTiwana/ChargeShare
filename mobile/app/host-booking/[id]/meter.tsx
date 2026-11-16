@@ -11,16 +11,16 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { getBookingDetail, submitMeterReading } from '../../../../src/api/bookings';
-import { getPublicConfig } from '../../../../src/api/config';
-import { useAuthStore } from '../../../../src/store/auth-store';
-import { HostStatusGate } from '../../../../src/components/HostStatusGate';
-import { TextField } from '../../../../src/components/TextField';
-import { Button } from '../../../../src/components/Button';
-import { formatPaisaToRupees } from '../../../../src/components/MoneyText';
-import { computeSessionPreview } from '../../../../src/utils/money';
-import { uploadImageWithSignedUrl } from '../../../../src/utils/upload-helper';
-import { colors, radii, spacing } from '../../../../src/theme';
+import { getBookingDetail, submitMeterReading } from '../../../src/api/bookings';
+import { getPublicConfig } from '../../../src/api/config';
+import { useAuthStore } from '../../../src/store/auth-store';
+import { HostStatusGate } from '../../../src/components/HostStatusGate';
+import { TextField } from '../../../src/components/TextField';
+import { Button } from '../../../src/components/Button';
+import { formatPaisaToRupees } from '../../../src/components/MoneyText';
+import { computeSessionPreview } from '../../../src/utils/money';
+import { uploadImageWithSignedUrl } from '../../../src/utils/upload-helper';
+import { colors, radii, spacing } from '../../../src/theme';
 
 export default function EnterMeterReadingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -131,7 +131,7 @@ export default function EnterMeterReadingScreen() {
       Alert.alert(
         res.revised ? 'Reading Revised' : 'Reading Submitted',
         'Your reading has been recorded. The driver has 24 hours to review and confirm.',
-        [{ text: 'OK', onPress: () => router.replace(`/(app)/host-booking/${id}`) }]
+        [{ text: 'OK', onPress: () => router.replace({ pathname: '/host-booking/[id]', params: { id } }) }]
       );
     },
     onError: (err: any) => {

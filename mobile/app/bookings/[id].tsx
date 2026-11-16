@@ -14,7 +14,7 @@ import {
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { formatInTimeZone } from 'date-fns-tz';
 import * as Clipboard from 'expo-clipboard';
-import { useBookingDetail } from '../../../src/hooks/useBookingDetail';
+import { useBookingDetail } from '../../src/hooks/useBookingDetail';
 import {
   StatusTracker,
   MeterCard,
@@ -24,8 +24,8 @@ import {
   formatPaisaToRupees,
   Skeleton,
   ErrorState,
-} from '../../../src/components';
-import { colors, radii, spacing } from '../../../src/theme';
+} from '../../src/components';
+import { colors, radii, spacing } from '../../src/theme';
 
 const TIMEZONE = 'Asia/Karachi';
 
@@ -189,7 +189,9 @@ export default function BookingDetailScreen() {
     );
   }
 
-  const startStr = formatInTimeZone(new Date(booking.startsAt), TIMEZONE, 'EEE, d MMM yyyy &bull; HH:mm');
+  const datePart = formatInTimeZone(new Date(booking.startsAt), TIMEZONE, 'EEE, d MMM yyyy');
+  const timePart = formatInTimeZone(new Date(booking.startsAt), TIMEZONE, 'HH:mm');
+  const startStr = `${datePart} • ${timePart}`;
   const endStr = formatInTimeZone(new Date(booking.endsAt), TIMEZONE, 'HH:mm');
 
   const isPrivileged = ['ACCEPTED', 'CHARGING', 'COMPLETED', 'CONFIRMED'].includes(booking.status);
@@ -225,7 +227,7 @@ export default function BookingDetailScreen() {
         <Text style={styles.cardHeader}>Charger Details</Text>
         <Text style={styles.chargerTitle}>{booking.charger.title}</Text>
         <Text style={styles.chargerSubtitle}>
-          ⚡ {booking.charger.powerKw} kW &bull; 🔌 {booking.charger.connectorType}
+          ⚡ {booking.charger.powerKw} kW • 🔌 {booking.charger.connectorType}
         </Text>
 
         {/* Revealed Address after ACCEPTED */}

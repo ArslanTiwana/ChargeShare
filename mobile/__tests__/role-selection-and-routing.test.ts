@@ -28,34 +28,34 @@ describe('Role Selection and Initial Route Resolution', () => {
     expect(getInitialRoute(googleUser, true)).toBe('/(auth)/choose-role');
   });
 
-  it('redirects to /(app)/find when preferredMode is DRIVER', () => {
+  it('redirects to /find when preferredMode is DRIVER', () => {
     const driverUser = {
       preferredMode: 'DRIVER' as const,
       hostStatus: 'NONE' as const,
     };
-    expect(getInitialRoute(driverUser, true)).toBe('/(app)/find');
+    expect(getInitialRoute(driverUser, true)).toBe('/find');
   });
 
-  it('redirects to /(app)/host-dashboard when preferredMode is HOST across all host statuses', () => {
+  it('redirects to /host-dashboard when preferredMode is HOST across all host statuses', () => {
     // 1. APPROVED -> goes to host-dashboard (renders full host dashboard)
     expect(
       getInitialRoute({ preferredMode: 'HOST', hostStatus: 'APPROVED' }, true)
-    ).toBe('/(app)/host-dashboard');
+    ).toBe('/host-dashboard');
 
     // 2. PENDING -> goes to host-dashboard (HostStatusGate renders review waiting screen)
     expect(
       getInitialRoute({ preferredMode: 'HOST', hostStatus: 'PENDING' }, true)
-    ).toBe('/(app)/host-dashboard');
+    ).toBe('/host-dashboard');
 
     // 3. NONE -> goes to host-dashboard (HostStatusGate renders onboarding application)
     expect(
       getInitialRoute({ preferredMode: 'HOST', hostStatus: 'NONE' }, true)
-    ).toBe('/(app)/host-dashboard');
+    ).toBe('/host-dashboard');
 
     // 4. SUSPENDED -> goes to host-dashboard (HostStatusGate renders suspension notice)
     expect(
       getInitialRoute({ preferredMode: 'HOST', hostStatus: 'SUSPENDED' }, true)
-    ).toBe('/(app)/host-dashboard');
+    ).toBe('/host-dashboard');
   });
 
   it('switches role local-first and initiates non-blocking background sync', async () => {

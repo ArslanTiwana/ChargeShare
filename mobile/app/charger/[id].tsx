@@ -11,18 +11,18 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatInTimeZone } from 'date-fns-tz';
-import { getChargerDetail, getChargerReviews } from '../../../src/api/chargers';
-import { useAvailability } from '../../../src/hooks/useAvailability';
-import { createBooking } from '../../../src/api/bookings';
-import { getPublicConfig } from '../../../src/api/config';
-import { useAuthStore } from '../../../src/store/auth-store';
-import { SlotPicker } from '../../../src/components/SlotPicker';
-import { Button } from '../../../src/components/Button';
-import { formatPaisaToRupees } from '../../../src/components/MoneyText';
-import { Skeleton } from '../../../src/components/Skeleton';
-import { ErrorState } from '../../../src/components/ErrorState';
-import { mapBookingErrorCode } from '../../../src/utils/booking-errors';
-import { colors, radii, spacing } from '../../../src/theme';
+import { getChargerDetail, getChargerReviews } from '../../src/api/chargers';
+import { useAvailability } from '../../src/hooks/useAvailability';
+import { createBooking } from '../../src/api/bookings';
+import { getPublicConfig } from '../../src/api/config';
+import { useAuthStore } from '../../src/store/auth-store';
+import { SlotPicker } from '../../src/components/SlotPicker';
+import { Button } from '../../src/components/Button';
+import { formatPaisaToRupees } from '../../src/components/MoneyText';
+import { Skeleton } from '../../src/components/Skeleton';
+import { ErrorState } from '../../src/components/ErrorState';
+import { mapBookingErrorCode } from '../../src/utils/booking-errors';
+import { colors, radii, spacing } from '../../src/theme';
 
 const TIMEZONE = 'Asia/Karachi';
 
@@ -98,14 +98,14 @@ export default function ChargerDetailScreen() {
     onSuccess: (booking) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['charger-availability', id] });
-      router.replace(`/(app)/bookings/${booking.id}`);
+      router.replace({ pathname: '/bookings/[id]', params: { id: booking.id } });
     },
     onError: (err: any) => {
       const { title, message, action } = mapBookingErrorCode(err?.code, err?.message);
       if (action === 'profile') {
         Alert.alert(title, message, [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Go to Profile', onPress: () => router.push('/(app)/profile') },
+          { text: 'Go to Profile', onPress: () => router.push('/profile') },
         ]);
       } else if (action === 'refetch') {
         Alert.alert(title, message);
@@ -123,7 +123,7 @@ export default function ChargerDetailScreen() {
         'Please add a phone number to your profile before requesting a booking so the host can contact you.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Add Phone in Profile', onPress: () => router.push('/(app)/profile') },
+          { text: 'Add Phone in Profile', onPress: () => router.push('/profile') },
         ]
       );
       return;
@@ -180,7 +180,7 @@ export default function ChargerDetailScreen() {
 
         <Text style={styles.title}>{charger.title}</Text>
         <Text style={styles.subtitle}>
-          Hosted by {hostFirstName} &bull; 📍 Sector {charger.areaLabel}
+          Hosted by {hostFirstName} • 📍 Sector {charger.areaLabel}
         </Text>
 
         {charger.hostRatingAverage != null && (
@@ -216,22 +216,22 @@ export default function ChargerDetailScreen() {
       {/* Slot Picker Component */}
       <SlotPicker
         selectedDate={selectedDate}
-        onSelectDate={(d) => {
+        onSelectDate={(d: string) => {
           setSelectedDate(d);
           setSelectedStartsAt(null);
           setSelectedEndsAt(null);
         }}
         selectedStartsAt={selectedStartsAt}
         selectedDurationHours={selectedDurationHours}
-        onSelectDuration={(h) => {
+        onSelectDuration={(h: number) => {
           setSelectedDurationHours(h);
           setSelectedStartsAt(null);
           setSelectedEndsAt(null);
         }}
         onSelectSlot={handleSelectSlot}
         bookedSlots={availabilityQuery.data?.bookedSlots || []}
-        minDurationHours={configQuery.data?.minBookingDurationHours || 1}
-        maxDurationHours={configQuery.data?.maxBookingDurationHours || 4}
+        minDurationHours={1}
+        maxDurationHours={3}
         isLoading={availabilityQuery.isLoading}
       />
 
@@ -241,7 +241,7 @@ export default function ChargerDetailScreen() {
           <Text style={styles.estimateTitle}>ESTIMATED SESSION COST</Text>
           <View style={styles.estimateRow}>
             <Text style={styles.estimateKwh}>
-              ~{estimate.kwh} kWh ({selectedDurationHours}h @ {charger.powerKw} kW)
+              ~{estimate.kwh} kWh ({selectedDurationHours} hr @ {charger.powerKw} kW)
             </Text>
             <Text style={styles.estimateCost}>
               ~{formatPaisaToRupees(estimate.costPaisa)}

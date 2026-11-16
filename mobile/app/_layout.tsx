@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -20,6 +20,7 @@ import {
   registerForPushNotificationsAsync,
   handleNotificationNavigation,
 } from '../src/utils/notifications';
+import { getInitialRoute } from './index';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,7 +32,7 @@ const queryClient = new QueryClient({
 });
 
 function AuthGate() {
-  const { isLoading, isAuthenticated, initializeAuth } = useAuthStore();
+  const { isLoading, isAuthenticated, user, initializeAuth } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
 
@@ -50,10 +51,14 @@ function AuthGate() {
       // Redirect to sign in if not authenticated
       router.replace('/(auth)/sign-in');
     } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to app if already authenticated
-      router.replace('/(app)/find');
+      // If on choose-role and user hasn't chosen role yet, do not redirect away
+      if ((segments as string[])[1] === 'choose-role' && !user?.preferredMode) {
+        return;
+      }
+      const initial = getInitialRoute(user, isAuthenticated);
+      router.replace(initial as any);
     }
-  }, [isLoading, isAuthenticated, segments, router]);
+  }, [isLoading, isAuthenticated, user, segments, router]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -86,7 +91,81 @@ function AuthGate() {
     );
   }
 
-  return <Slot />;
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.white,
+        },
+        headerTintColor: colors.ink,
+        headerTitleStyle: {
+          fontWeight: '700',
+        },
+        headerShadowVisible: false,
+        headerBackTitle: 'Back',
+      }}
+    >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="charger/[id]"
+        options={{
+          title: 'Charger Details',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="bookings/[id]"
+        options={{
+          title: 'Booking Details',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="host-booking/[id]"
+        options={{
+          title: 'Host Booking Details',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="host-booking/[id]/meter"
+        options={{
+          title: 'Enter Meter Reading',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="host-charger/new"
+        options={{
+          title: 'Add New Charger',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="host-charger/[id]"
+        options={{
+          title: 'Edit Charger',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="host-wallet/topup"
+        options={{
+          title: 'Top Up Wallet',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="help"
+        options={{
+          title: 'Help & Support Desk',
+          headerShown: true,
+        }}
+      />
+    </Stack>
+  );
 }
 
 export default function RootLayout() {

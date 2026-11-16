@@ -1,11 +1,11 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View } from 'react-native';
 import { useAuthStore } from '../../src/store/auth-store';
 import { RoleSwitcher } from '../../src/components/RoleSwitcher';
 import { colors } from '../../src/theme';
 
-export default function AppLayout() {
+export default function TabsLayout() {
   const { activeRole } = useAuthStore();
   const isHost = activeRole === 'host';
 
@@ -49,7 +49,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="find"
         options={{
-          href: isHost ? null : '/(app)/find',
+          href: isHost ? null : '/find',
           title: 'Find',
           headerTitle: 'Find Chargers',
           tabBarIcon: ({ color }) => (
@@ -60,7 +60,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
-          href: isHost ? null : '/(app)/bookings',
+          href: isHost ? null : '/bookings',
           title: 'Bookings',
           headerTitle: 'My Bookings',
           tabBarIcon: ({ color }) => (
@@ -73,7 +73,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="host-dashboard"
         options={{
-          href: isHost ? '/(app)/host-dashboard' : null,
+          href: isHost ? '/host-dashboard' : null,
           title: 'Dashboard',
           headerTitle: 'Host Dashboard',
           tabBarIcon: ({ color }) => (
@@ -84,7 +84,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="host-bookings"
         options={{
-          href: isHost ? '/(app)/host-bookings' : null,
+          href: isHost ? '/host-bookings' : null,
           title: 'Bookings',
           headerTitle: 'Host Bookings',
           tabBarIcon: ({ color }) => (
@@ -95,7 +95,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="host-chargers"
         options={{
-          href: isHost ? '/(app)/host-chargers' : null,
+          href: isHost ? '/host-chargers' : null,
           title: 'Chargers',
           headerTitle: 'My Chargers',
           tabBarIcon: ({ color }) => (
@@ -106,7 +106,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="host-wallet"
         options={{
-          href: isHost ? '/(app)/host-wallet' : null,
+          href: isHost ? '/host-wallet' : null,
           title: 'Wallet',
           headerTitle: 'Host Wallet',
           tabBarIcon: ({ color }) => (
@@ -124,64 +124,6 @@ export default function AppLayout() {
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20, color }}>👤</Text>
           ),
-        }}
-      />
-
-      {/* ── HIDDEN STACK SCREENS ── */}
-      <Tabs.Screen
-        name="charger/[id]"
-        options={{
-          href: null,
-          title: 'Charger Details',
-          headerTitle: 'Charger Details',
-        }}
-      />
-      <Tabs.Screen
-        name="bookings/[id]"
-        options={{
-          href: null,
-          title: 'Booking Details',
-          headerTitle: 'Booking Details',
-        }}
-      />
-      <Tabs.Screen
-        name="host-charger/new"
-        options={{
-          href: null,
-          title: 'Add Charger',
-          headerTitle: 'Add New Charger',
-        }}
-      />
-      <Tabs.Screen
-        name="host-charger/[id]"
-        options={{
-          href: null,
-          title: 'Edit Charger',
-          headerTitle: 'Edit Charger Specs',
-        }}
-      />
-      <Tabs.Screen
-        name="host-booking/[id]"
-        options={{
-          href: null,
-          title: 'Host Booking Details',
-          headerTitle: 'Host Booking Details',
-        }}
-      />
-      <Tabs.Screen
-        name="host-booking/[id]/meter"
-        options={{
-          href: null,
-          title: 'Enter Meter Reading',
-          headerTitle: 'Enter Meter Reading',
-        }}
-      />
-      <Tabs.Screen
-        name="host-wallet/topup"
-        options={{
-          href: null,
-          title: 'Top Up Wallet',
-          headerTitle: 'Top Up Wallet',
         }}
       />
     </Tabs>

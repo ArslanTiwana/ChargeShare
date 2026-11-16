@@ -20,7 +20,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_CLEARTEXT_TRAFFIC": "false"
+        "EXPO_PUBLIC_CLEARTEXT_TRAFFIC": "false",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
@@ -29,7 +30,8 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_CLEARTEXT_TRAFFIC": "false"
+        "EXPO_PUBLIC_CLEARTEXT_TRAFFIC": "false",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },

@@ -52,12 +52,14 @@ export default function FindScreen() {
 
   // User location & map region
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number }>({
+  const [searchParams, setSearchParams] = useState<{ lat: number; lng: number; radiusKm: number }>({
     lat: ISLAMABAD_FALLBACK.latitude,
     lng: ISLAMABAD_FALLBACK.longitude,
+    radiusKm: 15,
   });
   const [mapRegion, setMapRegion] = useState<Region>(ISLAMABAD_FALLBACK);
   const [showSearchAreaBtn, setShowSearchAreaBtn] = useState(false);
+  const isSelectingMarkerRef = useRef(false);
 
   // Location Permission Modal Rationale
   const [showPermissionRationale, setShowPermissionRationale] = useState(false);
@@ -68,19 +70,22 @@ export default function FindScreen() {
   const [fastOnly, setFastOnly] = useState(false);
   const [selectedConnector, setSelectedConnector] = useState<ConnectorType | null>(null);
 
-  // Dynamic radius calculated from current map region and capped
-  const searchRadiusKm = useMemo(() => {
-    return calculateRadiusFromRegion(mapRegion);
-  }, [mapRegion]);
-
-  // Query nearby chargers
+  // Query nearby chargers based on active search parameters
   const { chargers, totalFound, isLoading, isError, error, refetch } = useNearbyChargers({
-    lat: searchCenter.lat,
-    lng: searchCenter.lng,
-    radiusKm: searchRadiusKm,
+    lat: searchParams.lat,
+    lng: searchParams.lng,
+    radiusKm: searchParams.radiusKm,
     fastOnly,
     connectorType: selectedConnector,
   });
+
+  // Sort selected charger to the top when selected
+  const displayedChargers = useMemo(() => {
+    if (!selectedChargerId) return chargers;
+    const selected = chargers.find((c) => c.id === selectedChargerId);
+    if (!selected) return chargers;
+    return [selected, ...chargers.filter((c) => c.id !== selectedChargerId)];
+  }, [chargers, selectedChargerId]);
 
   // Check initial location permission
   useEffect(() => {
@@ -100,7 +105,11 @@ export default function FindScreen() {
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const coords = { lat: loc.coords.latitude, lng: loc.coords.longitude };
       setUserLocation(coords);
-      setSearchCenter(coords);
+      setSearchParams({
+        lat: coords.lat,
+        lng: coords.lng,
+        radiusKm: 15,
+      });
       mapRef.current?.animateToRegion(
         {
           latitude: coords.lat,
@@ -131,19 +140,25 @@ export default function FindScreen() {
   // Region change handler for "Search this area" button
   const handleRegionChangeComplete = useCallback((region: Region) => {
     setMapRegion(region);
+    if (isSelectingMarkerRef.current) {
+      isSelectingMarkerRef.current = false;
+      return;
+    }
     // Rough distance calculation from previous search center
-    const latDiff = Math.abs(region.latitude - searchCenter.lat);
-    const lngDiff = Math.abs(region.longitude - searchCenter.lng);
-    // If moved > ~1.5 km
-    if (latDiff > 0.015 || lngDiff > 0.015) {
+    const latDiff = Math.abs(region.latitude - searchParams.lat);
+    const lngDiff = Math.abs(region.longitude - searchParams.lng);
+    // If moved > ~2 km
+    if (latDiff > 0.02 || lngDiff > 0.02) {
       setShowSearchAreaBtn(true);
     }
-  }, [searchCenter]);
+  }, [searchParams]);
 
   const handleSearchThisArea = () => {
-    setSearchCenter({
+    const dynamicRadius = calculateRadiusFromRegion(mapRegion);
+    setSearchParams({
       lat: mapRegion.latitude,
       lng: mapRegion.longitude,
+      radiusKm: dynamicRadius,
     });
     setShowSearchAreaBtn(false);
   };
@@ -159,7 +174,11 @@ export default function FindScreen() {
         },
         500
       );
-      setSearchCenter(userLocation);
+      setSearchParams({
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        radiusKm: 15,
+      });
       setShowSearchAreaBtn(false);
     } else {
       fetchUserLocation();
@@ -167,6 +186,11 @@ export default function FindScreen() {
   };
 
   const handleSelectMarker = (charger: NearbyCharger) => {
+    if (selectedChargerId === charger.id) {
+      handleOpenDetail(charger.id);
+      return;
+    }
+    isSelectingMarkerRef.current = true;
     setSelectedChargerId(charger.id);
     mapRef.current?.animateToRegion(
       {
@@ -181,7 +205,10 @@ export default function FindScreen() {
   };
 
   const handleOpenDetail = (chargerId: string) => {
-    router.push(`/(app)/charger/${chargerId}`);
+    router.push({
+      pathname: '/charger/[id]',
+      params: { id: chargerId },
+    });
   };
 
   const snapPoints = useMemo(() => ['18%', '50%', '85%'], []);
@@ -311,7 +338,11 @@ export default function FindScreen() {
       >
         <View style={styles.sheetHeader}>
           <Text style={styles.sheetTitle}>
-            {isLoading ? 'Searching chargers...' : `${chargers.length} Chargers Nearby`}
+            {isLoading
+              ? 'Searching chargers...'
+              : selectedChargerId
+              ? `1 Selected • ${chargers.length} Nearby`
+              : `${chargers.length} Chargers Nearby`}
           </Text>
           <Text style={styles.sheetSubtitle}>
             Tap a charger to view details & book slots
@@ -335,7 +366,7 @@ export default function FindScreen() {
           />
         ) : (
           <BottomSheetFlatList
-            data={chargers}
+            data={displayedChargers}
             keyExtractor={(item: NearbyCharger) => item.id}
             contentContainerStyle={styles.listContent}
             renderItem={({ item }: { item: NearbyCharger }) => (
